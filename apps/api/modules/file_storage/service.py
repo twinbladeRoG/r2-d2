@@ -11,6 +11,8 @@ class FileStorageService:
         async with aiofiles.open(file_path, "wb") as saved_file:
             content = await file.read()
             await saved_file.write(content)
+            await file.close()
+            await saved_file.close()
 
             return {
                 "message": "File uploaded",

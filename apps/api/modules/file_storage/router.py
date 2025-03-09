@@ -17,6 +17,6 @@ async def create_file(file: UploadFile):
     return {"message": "Create file", "data": response}
 
 
-@router.delete("/")
-def delete_file():
+@router.delete("/{file_id}")
+def delete_file(file_id: int):
     return {"message": "Delete file"}
