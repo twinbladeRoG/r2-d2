@@ -3,6 +3,6 @@ from fastapi import APIRouter
 router = APIRouter(prefix="/document-extraction", tags=["Document Extraction"])
 
 
-@router.get("/")
-def get_all_documents():
+@router.post("/{file_name}")
+def extract_document(file_name: str):
     return {"message": "Get all documents"}

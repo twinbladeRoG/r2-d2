@@ -6,3 +6,6 @@ __pycache__
 .ruff_cache
 uploads/*.*
 !uploads/.gitkeep
+
+**/outputs/*.*
+!**/outputs/.gitkeep
