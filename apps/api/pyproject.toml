@@ -5,11 +5,13 @@ description = "Fast API for R2-D2"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiofiles>=24.1.0",
     "fastapi[standard]>=0.115.11",
     "langchain-openai>=0.3.7",
     "langgraph>=0.3.2",
     "pillow>=11.1.0",
     "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.20",
 ]
 
 [dependency-groups]
