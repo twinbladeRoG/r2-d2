@@ -12,6 +12,7 @@ dependencies = [
     "langchain-openai>=0.3.7",
     "langgraph>=0.3.2",
     "pillow>=11.1.0",
+    "psycopg2-binary>=2.9.10",
     "python-dotenv>=1.0.1",
     "python-multipart>=0.0.20",
     "sqlmodel>=0.0.24",
