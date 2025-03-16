@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Any
 
 from sqlmodel import Session, func, select
 
@@ -24,7 +23,9 @@ class UserService:
         session.refresh(user)
         return user
 
-    def get_users(self, session: Session, page: int = 0, limit: int = 10) -> Any:
+    def get_users(
+        self, session: Session, page: int = 0, limit: int = 10
+    ) -> UsersPublic:
         count_statement = select(func.count()).select_from(User)
         count = session.exec(count_statement).one()
 
