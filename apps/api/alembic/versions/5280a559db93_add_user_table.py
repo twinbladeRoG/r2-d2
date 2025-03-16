@@ -1,8 +1,8 @@
 """add user table
 
-Revision ID: c6f97799329e
+Revision ID: 5280a559db93
 Revises:
-Create Date: 2025-03-16 10:47:10.053087
+Create Date: 2025-03-16 12:35:10.325041
 
 """
 
@@ -13,7 +13,7 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "c6f97799329e"
+revision: str = "5280a559db93"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,11 +26,9 @@ def upgrade() -> None:
         "user",
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column(
             "username", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False
         ),
-        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "email", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False
         ),
@@ -40,6 +38,8 @@ def upgrade() -> None:
         sa.Column(
             "last_name", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True
         ),
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("username"),
     )
