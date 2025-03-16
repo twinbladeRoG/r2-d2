@@ -1,15 +1,9 @@
-import sys
 from logging.config import fileConfig
 
 from alembic import context
+from api import models
+from api.core.config import settings
 from sqlalchemy import engine_from_config, pool
-
-# TODO: Find a better way to do this
-sys.path = ["", ".."] + sys.path[1:]
-
-
-from api import models  # noqa: E402
-from api.core.config import settings  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

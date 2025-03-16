@@ -29,3 +29,28 @@ uv sync
 | ------- | ----------- |
 | [Alembic](https://alembic.sqlalchemy.org/en/latest/) | Database Migration |
 
+## Managing Migrations using Alembic
+
+To create new migration
+
+```bash
+PYTHONPATH=".." alembic revision --autogenerate -m "add user table"
+```
+
+To run your migrations
+
+```bash
+PYTHONPATH=".." alembic upgrade head
+```
+
+To check migration history
+
+```bash
+PYTHONPATH=".." alembic history --verbose
+```
+
+To downgrade to beginning
+
+```bash
+PYTHONPATH=".." alembic downgrade base
+```
