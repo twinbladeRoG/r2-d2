@@ -1,0 +1,11 @@
+exclude = [".venv", "**/test/*.py"]
+
+[lint]
+select = [
+    "FAST001",
+    "FAST002",
+    "FAST003",
+    "T201",
+    "T203"
+]
+preview = true

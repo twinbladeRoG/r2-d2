@@ -67,6 +67,10 @@ class TokenPayload(SQLModel):
     sub: str | None = None
 
 
-class Token(SQLModel):
+class AccessToken(SQLModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class Token(AccessToken):
+    refresh_token: str

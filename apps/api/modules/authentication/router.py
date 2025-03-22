@@ -5,10 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.core.config import settings
-from api.core.security import create_access_token
-from api.dependencies import AuthenticationServiceDep, SessionDep, UserServiceDep
-from api.models import Token, UserCreate, UserPublic
-from api.modules.authentication.service import AuthenticationService
+from api.core.security import create_access_token, create_refresh_token
+from api.dependencies import (
+    AuthenticationServiceDep,
+    CurrentUser,
+    SessionDep,
+    UserServiceDep,
+)
+from api.models import AccessToken, Token, UserCreate, UserPublic
 
 router = APIRouter(prefix="/authentication", tags=["Authentication"])
 
@@ -34,16 +38,37 @@ def login_user(
         )
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
 
     return Token(
-        access_token=create_access_token(user.id, expires_delta=access_token_expires)
+        access_token=create_access_token(user.id, expires_delta=access_token_expires),
+        refresh_token=create_refresh_token(
+            user.id, expires_delta=refresh_token_expires
+        ),
     )
 
 
-@router.post("/user/register", response_model=UserPublic)
+@router.post(
+    "/user/register",
+)
 def create_user(
-    *, session: SessionDep, user_service: UserServiceDep, user_data: UserCreate
-) -> Any:
-    auth_service = AuthenticationService()
+    *,
+    session: SessionDep,
+    auth_service: AuthenticationServiceDep,
+    user_service: UserServiceDep,
+    user_data: UserCreate,
+) -> UserPublic:
     user = auth_service.register_user(session, user_service, user_data)
     return user
+
+
+@router.get("/user/refresh")
+def refresh_jwt_token(
+    *,
+    user: CurrentUser,
+):
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    return AccessToken(
+        access_token=create_access_token(user.id, expires_delta=access_token_expires)
+    )
