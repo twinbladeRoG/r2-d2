@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from api.core.config import settings
 from api.core.security import create_access_token
-from api.dependencies import SessionDep
+from api.dependencies import AuthenticationServiceDep, SessionDep, UserServiceDep
 from api.models import Token, UserCreate, UserPublic
 from api.modules.authentication.service import AuthenticationService
 
@@ -15,11 +15,16 @@ router = APIRouter(prefix="/authentication", tags=["Authentication"])
 
 @router.post("/user/login")
 def login_user(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    session: SessionDep,
+    auth_service: AuthenticationServiceDep,
+    user_service: UserServiceDep,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
-    auth_service = AuthenticationService()
     user = auth_service.authenticate(
-        session=session, email=form_data.username, password=form_data.password
+        session=session,
+        user_service=user_service,
+        email=form_data.username,
+        password=form_data.password,
     )
 
     if not user:
@@ -36,7 +41,9 @@ def login_user(
 
 
 @router.post("/user/register", response_model=UserPublic)
-def create_user(*, session: SessionDep, user_data: UserCreate) -> Any:
+def create_user(
+    *, session: SessionDep, user_service: UserServiceDep, user_data: UserCreate
+) -> Any:
     auth_service = AuthenticationService()
-    user = auth_service.register_user(session, user_data)
+    user = auth_service.register_user(session, user_service, user_data)
     return user
