@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from api.core.config import settings
 from api.core.security import create_access_token
 from api.dependencies import SessionDep
-from api.models import Token
+from api.models import Token, UserCreate, UserPublic
 from api.modules.authentication.service import AuthenticationService
 
 router = APIRouter(prefix="/authentication", tags=["Authentication"])
@@ -33,3 +33,10 @@ def login_user(
     return Token(
         access_token=create_access_token(user.id, expires_delta=access_token_expires)
     )
+
+
+@router.post("/user/register", response_model=UserPublic)
+def create_user(*, session: SessionDep, user_data: UserCreate) -> Any:
+    auth_service = AuthenticationService()
+    user = auth_service.register_user(session, user_data)
+    return user

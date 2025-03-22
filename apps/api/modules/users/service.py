@@ -16,6 +16,11 @@ class UserService:
         user = session.exec(statement).first()
         return user
 
+    def get_user_by_username(self, session: Session, username: str) -> User | None:
+        statement = select(User).where(User.username == username)
+        user = session.exec(statement).first()
+        return user
+
     def create_user(self, session: Session, user_data: UserBase) -> User:
         user = User.model_validate(user_data)
         session.add(user)
