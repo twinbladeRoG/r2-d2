@@ -74,3 +74,9 @@ class AccessToken(SQLModel):
 
 class Token(AccessToken):
     refresh_token: str
+
+
+class DocumentBase(SQLModel):
+    filename: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(min_length=1, max_length=255)
+    content_length: int = Field(ge=0)

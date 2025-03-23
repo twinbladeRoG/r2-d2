@@ -1,5 +1,11 @@
+import UploadForm from "../modules/knowledge-base/UploadForm";
+
 const KnowledgeBase = () => {
-  return <div>KnowledgeBase</div>;
+  return (
+    <div>
+      <UploadForm />
+    </div>
+  );
 };
 
 export default KnowledgeBase;
