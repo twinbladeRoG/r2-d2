@@ -12,6 +12,8 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { Navigate, Outlet } from "react-router-dom";
 import { useActiveUser } from "../../apis/queries/auth.queries";
+import { Icon } from "@iconify/react";
+import AppNavLink from "./AppNavLink";
 
 const RootLayout = () => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -42,16 +44,23 @@ const RootLayout = () => {
             visibleFrom="sm"
             size="sm"
           />
+
+          <Title>R2 D2</Title>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
-        <AppShell.Section>
-          <Title>R2 D2</Title>
-        </AppShell.Section>
-
         <AppShell.Section grow component={ScrollArea}>
-          Navbar
+          <AppNavLink
+            to="/"
+            label="Chat"
+            leftSection={<Icon icon="mdi:chat-bubble" />}
+          />
+          <AppNavLink
+            to="/knowledge-base"
+            label="Knowledge Base"
+            leftSection={<Icon icon="mdi:bookshelf" />}
+          />
         </AppShell.Section>
 
         <AppShell.Section>
