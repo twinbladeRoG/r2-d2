@@ -3,22 +3,13 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import EmailStr, field_validator
-from sqlmodel import Column, DateTime, Field, SQLModel
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 from api.core.security import get_password_hash
 
 
 def utcnow():
     return datetime.now(timezone.utc)
-
-
-class TimeStampMixin(SQLModel):
-    created_at: Optional[datetime] = Field(
-        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
-    )
-    updated_at: Optional[datetime] = Field(
-        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
-    )
 
 
 class Pagination(SQLModel):
@@ -41,8 +32,14 @@ class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=40)
 
 
-class UserPublic(UserBase, TimeStampMixin):
+class UserPublic(UserBase):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
 
 
 class UsersPublic(SQLModel):
@@ -50,9 +47,18 @@ class UsersPublic(SQLModel):
     pagination: Pagination
 
 
-class User(UserBase, TimeStampMixin, table=True):
+class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
     password: str
+
+    documents: list["Document"] = Relationship(back_populates="owner")
 
     @field_validator("password", mode="after")
     @classmethod
@@ -78,5 +84,19 @@ class Token(AccessToken):
 
 class DocumentBase(SQLModel):
     filename: str = Field(min_length=1, max_length=255)
+    original_filename: str = Field(min_length=1, max_length=255)
     content_type: str = Field(min_length=1, max_length=255)
     content_length: int = Field(ge=0)
+
+
+class Document(DocumentBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    owner_id: uuid.UUID = Field(foreign_key="user.id")
+    owner: User = Relationship(back_populates="documents")

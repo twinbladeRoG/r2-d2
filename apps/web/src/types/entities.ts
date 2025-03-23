@@ -6,3 +6,11 @@ export interface IUser extends IBaseEntity {
   first_name: string;
   last_name: string;
 }
+
+export interface IFile extends IBaseEntity {
+  filename: string;
+  content_type: string;
+  content_length: number;
+  original_filename: string;
+  owner_id: string;
+}

@@ -13,19 +13,18 @@ import { bytesToSize } from "../../../utils";
 interface DropFileInputProps extends Partial<DropzoneProps> {
   children?: React.ReactNode;
   error?: string;
+  value?: FileWithPath[];
 }
 
 const DropFileInput: React.FC<DropFileInputProps> = ({
   children,
   onDrop,
   error,
+  value,
   ...props
 }) => {
-  const [files, setFiles] = React.useState<FileWithPath[]>([]);
-
   const handleDrop = (newFiles: FileWithPath[]) => {
     onDrop?.(newFiles);
-    setFiles(newFiles);
   };
 
   const [rejections, setRejections] = React.useState<FileRejection[] | null>(
@@ -37,7 +36,7 @@ const DropFileInput: React.FC<DropFileInputProps> = ({
   };
 
   const handleRemoveFile = (name: string) => {
-    setFiles((prev) => prev.filter((file) => file.name !== name));
+    onDrop?.((value ?? [])?.filter((file) => file.name !== name));
   };
 
   return (
@@ -85,7 +84,7 @@ const DropFileInput: React.FC<DropFileInputProps> = ({
       </Dropzone>
 
       <div className="grid grid-cols-4 gap-4">
-        {files.map((file) => (
+        {value?.map((file) => (
           <Card key={file.name} shadow="lg" bg={"gray"} className="!relative">
             <div className="flex items-center justify-center gap-7">
               {file.type === MIME_TYPES.pdf && (
