@@ -2,6 +2,9 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, PasswordInput, TextInput } from "@mantine/core";
+import { useLogin } from "../../apis/queries/auth.queries";
+import { notifications } from "@mantine/notifications";
+import { useNavigate } from "react-router-dom";
 
 const schema = yup.object({
   username: yup.string().required(),
@@ -21,8 +24,26 @@ const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
     }
   });
 
+  const login = useLogin();
+  const navigate = useNavigate();
+
   const handleSubmit = form.handleSubmit(async (data) => {
     console.log(data);
+    login.mutate(data, {
+      onSuccess: (res) => {
+        localStorage.setItem("ACCESS_TOKEN", res.access_token);
+        localStorage.setItem("REFRESH_TOKEN", res.refresh_token);
+
+        navigate("/");
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Oops! Something went wrong",
+          message: error.message,
+          color: "red"
+        });
+      }
+    });
   });
 
   return (
@@ -45,7 +66,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
         mb="lg"
       />
 
-      <Button fullWidth type="submit">
+      <Button fullWidth type="submit" loading={login.isPending}>
         Login
       </Button>
     </form>

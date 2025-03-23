@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = import.meta.env.API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export class ApiResponseError extends Error {
   code = 400;
@@ -108,21 +108,17 @@ export const getToken = async () => {
  * Generate HTTP headers
  */
 export const getHeader = async (
-  headers = new Headers(),
-  hasFiles = false
+  additionalHeader = new Headers()
 ): Promise<Headers> => {
-  const defaultHeaders = new Headers();
-  defaultHeaders.append("Accept", "application/json");
-  defaultHeaders.append("Content-Type", "application/json");
+  const headers = new Headers();
+  headers.append("Accept", "application/json");
 
-  if (headers) {
-    headers.forEach((value: string, key: string) =>
-      defaultHeaders.append(key, value)
+  if (additionalHeader) {
+    additionalHeader.forEach((value: string, key: string) =>
+      headers.append(key, value)
     );
-  }
-
-  if (hasFiles) {
-    defaultHeaders.delete("Content-Type");
+  } else {
+    headers.append("Content-Type", "application/json");
   }
 
   let token: string | null;
@@ -134,28 +130,33 @@ export const getHeader = async (
   }
 
   if (token) {
-    defaultHeaders.append("Authorization", `Bearer ${token}`);
+    headers.append("Authorization", `Bearer ${token}`);
   }
 
-  return defaultHeaders;
+  return headers;
 };
 
 /**
  * Generate HTTP body
  */
 
-const getBody = (body?: BodyInit, hasFiles = false) =>
-  hasFiles ? body : JSON.stringify(body);
+const getBody = (body?: BodyInit) => {
+  if (body instanceof FormData) return body;
+  if (body instanceof URLSearchParams) return body;
+  return JSON.stringify(body);
+};
 
 type ErrorResponse = {
-  message?: string;
-  code?: number;
+  detail?: string;
 };
 
 /**
  * Handle HTTP error
  */
-const handleError = (httpStatusCode: number, response: ErrorResponse) => {
+const handleError = (
+  httpStatusCode: number,
+  response: unknown | ErrorResponse
+) => {
   if (httpStatusCode === 401) {
     throw new ApiResponseError(
       "Session expired, please login again",
@@ -165,7 +166,7 @@ const handleError = (httpStatusCode: number, response: ErrorResponse) => {
 
   if (!/^(2|3)[0-9][0-9]$/.test(String(httpStatusCode))) {
     throw new ApiResponseError(
-      response?.message || "Something went wrong!!",
+      (response as ErrorResponse)?.detail || "Something went wrong!!",
       httpStatusCode ?? 501
     );
   }
@@ -175,7 +176,6 @@ export type HTTPOptions = {
   baseURL?: string;
   isMockedURL?: boolean;
   headers?: Headers;
-  hasFiles?: boolean;
 };
 
 /**
@@ -204,7 +204,7 @@ const fetchGet = async <T extends ErrorResponse>(
 /**
  * HTTP POST Request
  */
-const fetchPost = async <T extends ErrorResponse>(
+const fetchPost = async <T extends unknown | ErrorResponse>(
   url: string,
   body?: unknown,
   options?: HTTPOptions
@@ -216,8 +216,8 @@ const fetchPost = async <T extends ErrorResponse>(
     }),
     {
       method: "POST",
-      headers: await getHeader(options?.headers, options?.hasFiles),
-      body: getBody(body as BodyInit, options?.hasFiles)
+      headers: await getHeader(options?.headers),
+      body: getBody(body as BodyInit)
     }
   );
 
@@ -229,7 +229,7 @@ const fetchPost = async <T extends ErrorResponse>(
 /**
  * HTTP PATCH Request
  */
-const fetchPatch = async <T extends ErrorResponse>(
+const fetchPatch = async <T extends unknown | ErrorResponse>(
   url: string,
   body?: unknown,
   options?: HTTPOptions
@@ -241,8 +241,8 @@ const fetchPatch = async <T extends ErrorResponse>(
     }),
     {
       method: "PATCH",
-      headers: await getHeader(options?.headers, options?.hasFiles),
-      body: getBody(body as BodyInit, options?.hasFiles)
+      headers: await getHeader(options?.headers),
+      body: getBody(body as BodyInit)
     }
   );
 
@@ -254,7 +254,7 @@ const fetchPatch = async <T extends ErrorResponse>(
 /**
  * HTTP PUT Request
  */
-const fetchPut = async <T extends ErrorResponse>(
+const fetchPut = async <T extends unknown | ErrorResponse>(
   url: string,
   body?: unknown,
   options?: HTTPOptions
@@ -266,8 +266,8 @@ const fetchPut = async <T extends ErrorResponse>(
     }),
     {
       method: "PUT",
-      headers: await getHeader(options?.headers, options?.hasFiles),
-      body: getBody(body as BodyInit, options?.hasFiles)
+      headers: await getHeader(options?.headers),
+      body: getBody(body as BodyInit)
     }
   );
 
@@ -279,7 +279,7 @@ const fetchPut = async <T extends ErrorResponse>(
 /**
  * HTTP DELETE Request
  */
-const fetchDelete = async <T extends ErrorResponse>(
+const fetchDelete = async <T extends unknown | ErrorResponse>(
   url: string,
   body?: unknown,
   options?: HTTPOptions
@@ -291,8 +291,8 @@ const fetchDelete = async <T extends ErrorResponse>(
     }),
     {
       method: "DELETE",
-      headers: await getHeader(options?.headers, options?.hasFiles),
-      body: getBody(body as BodyInit, options?.hasFiles)
+      headers: await getHeader(options?.headers),
+      body: getBody(body as BodyInit)
     }
   );
 

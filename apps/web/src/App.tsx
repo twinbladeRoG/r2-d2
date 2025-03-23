@@ -1,6 +1,7 @@
 import Router from "./Router";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Notifications } from "@mantine/notifications";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
@@ -12,6 +13,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
         <Router />
+        <Notifications />
       </MantineProvider>
 
       <ReactQueryDevtools initialIsOpen={false} />
