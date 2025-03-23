@@ -1,4 +1,4 @@
-import { ILoginRequest, ILoginResponse } from "../../types";
+import { ILoginRequest, ILoginResponse, IUser } from "../../types";
 import http from "../http";
 
 export const login = async (data: ILoginRequest) => {
@@ -15,3 +15,5 @@ export const login = async (data: ILoginRequest) => {
     headers
   });
 };
+
+export const getActiveUser = () => http.get<IUser>("/api/v1/users/me");

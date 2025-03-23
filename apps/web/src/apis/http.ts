@@ -28,10 +28,9 @@ const getURL = (
  * Refresh the access and refresh tokens, and
  * returns the new access token
  */
-export const refreshTokens = async (refreshTokenFromAuthFile?: string) => {
+export const refreshTokens = async () => {
   try {
-    const token =
-      refreshTokenFromAuthFile ?? localStorage.getItem("REFRESH_TOKEN");
+    const token = localStorage.getItem("REFRESH_TOKEN");
 
     if (!token) throw new ApiResponseError("No refresh token found", 401);
 
@@ -41,28 +40,27 @@ export const refreshTokens = async (refreshTokenFromAuthFile?: string) => {
     headers.append("Content-Type", "application/json");
     headers.append("Authorization", `Bearer ${token}`);
 
-    const response = await fetch(getURL("/auth/user/refresh"), {
-      method: "GET",
-      headers
-    });
+    const response = await fetch(
+      getURL("/api/v1/authentication/user/refresh"),
+      {
+        method: "GET",
+        headers
+      }
+    );
 
     const res = await response.json();
 
     if (!response.ok)
       throw new ApiResponseError(res.message || "Something went wrong", 401);
 
-    const { accessToken, refreshToken } = res.data.tokens;
-
     if (localStorage.getItem("KEEP_ME_LOGGED_IN") === "true") {
-      localStorage.setItem("ACCESS_TOKEN", accessToken);
-      return accessToken;
+      localStorage.setItem("ACCESS_TOKEN", res.access_token);
+      return res.access_token;
     }
 
-    localStorage.setItem("ACCESS_TOKEN", accessToken);
+    localStorage.setItem("ACCESS_TOKEN", res.access_token);
 
-    localStorage.setItem("REFRESH_TOKEN", refreshToken);
-
-    return accessToken;
+    return res.access_token;
   } catch {
     throw new ApiResponseError("Login session expired", 401);
   }
@@ -181,7 +179,7 @@ export type HTTPOptions = {
 /**
  * HTTP GET Request
  */
-const fetchGet = async <T extends ErrorResponse>(
+const fetchGet = async <T extends unknown | ErrorResponse>(
   url: string,
   options?: HTTPOptions
 ) => {
