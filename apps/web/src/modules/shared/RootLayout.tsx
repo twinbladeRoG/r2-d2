@@ -1,25 +1,51 @@
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Burger,
   Card,
   Group,
+  Menu,
   ScrollArea,
   Skeleton,
   Text,
   Title
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useActiveUser } from "../../apis/queries/auth.queries";
 import { Icon } from "@iconify/react";
 import AppNavLink from "./AppNavLink";
+import { useQueryClient } from "@tanstack/react-query";
+import { modals } from "@mantine/modals";
 
 const RootLayout = () => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
 
   const user = useActiveUser();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    modals.openConfirmModal({
+      title: "Are you sure you want to logout?",
+      children: (
+        <Text size="sm">
+          This action will log you out of your account and you will need to log
+          in again to access the application.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onCancel: () => {},
+      onConfirm: () => {
+        localStorage.removeItem("ACCESS_TOKEN");
+        localStorage.removeItem("REFRESH_TOKEN");
+        navigate("/");
+        queryClient.clear();
+      }
+    });
+  };
 
   return (
     <AppShell
@@ -78,8 +104,27 @@ const RootLayout = () => {
                     {user.data?.first_name} {user.data?.last_name}
                   </Text>
                   <Text>@{user.data?.username}</Text>
-                  <Text size="xs">{user.data?.email}</Text>
                 </div>
+                <Menu>
+                  <Menu.Target>
+                    <ActionIcon variant="subtle">
+                      <Icon icon="mdi:dots-vertical" className="text-2xl" />
+                    </ActionIcon>
+                  </Menu.Target>
+
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<Icon icon="mdi:user-card-details" />}>
+                      Profile
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<Icon icon="mdi:logout" />}
+                      color="red"
+                      onClick={handleLogout}>
+                      Logout
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
               </div>
             </Card>
           )}

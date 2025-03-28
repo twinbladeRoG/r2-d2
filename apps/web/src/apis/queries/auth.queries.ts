@@ -16,5 +16,6 @@ export const useActiveUser = () =>
     queryFn: async () => {
       const res = await getActiveUser();
       return res;
-    }
+    },
+    retry: 0
   });
