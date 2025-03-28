@@ -1,10 +1,13 @@
+import os
+import time
 from pathlib import Path
 from uuid import uuid4
 
 import aiofiles
 from fastapi import UploadFile
-from sqlmodel import Session, select
+from sqlmodel import Session, delete, select
 
+from api.error import UserDefinedException
 from api.models import Document, DocumentBase, User
 
 UPLOAD_PATH = Path("uploads")
@@ -44,4 +47,35 @@ class FileStorageService:
     def get_user_files(self, session: Session, user: User) -> list[Document]:
         statement = select(Document).where(Document.owner_id == user.id)
         results = session.exec(statement)
+
         return results
+
+    def remove_file(self, session: Session, user: User, file_id: str):
+        statement = select(Document).where(Document.id == file_id)
+        document = session.exec(statement).one()
+
+        if document is None:
+            raise UserDefinedException(
+                "Document not found",
+                "DOCUMENT_NOT_FOUND",
+            )
+
+        if document.owner_id != user.id:
+            raise UserDefinedException(
+                "You don't have permission to remove this file",
+                "DOCUMENT_PERMISSION",
+            )
+
+        file_path = UPLOAD_PATH / user.username / document.filename
+
+        if not file_path.exists():
+            raise UserDefinedException(
+                "Document does not exists",
+                "DOCUMENT_DOES_NOT_EXISTS",
+            )
+
+        os.remove(file_path)
+
+        remove_statement = delete(Document).where(Document.id == file_id)
+        session.exec(remove_statement)
+        session.commit()

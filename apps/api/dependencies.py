@@ -13,6 +13,7 @@ from api.core.config import settings
 from api.core.db import engine
 from api.models import TokenPayload, User
 from api.modules.authentication.service import AuthenticationService
+from api.modules.file_storage.service import FileStorageService
 from api.modules.users.service import UserService
 
 
@@ -61,3 +62,5 @@ AuthenticationServiceDep = Annotated[
 ]
 
 UserServiceDep = Annotated[UserService, Depends(UserService)]
+
+FileStorageServiceDep = Annotated[FileStorageService, Depends(FileStorageService)]

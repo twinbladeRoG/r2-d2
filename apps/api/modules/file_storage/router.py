@@ -1,25 +1,28 @@
 from fastapi import APIRouter, UploadFile
 
-from api.dependencies import CurrentUser, SessionDep
-from api.models import Document, DocumentBase
-
-from .service import FileStorageService
+from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
+from api.models import Document
 
 router = APIRouter(prefix="/file-storage", tags=["File Storage"])
 
 
 @router.get("/")
-def get_all_files(session: SessionDep, user: CurrentUser) -> list[Document]:
-    file_storage_service = FileStorageService()
+def get_all_files(
+    session: SessionDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+) -> list[Document]:
     files = file_storage_service.get_user_files(session, user)
     return files
 
 
 @router.post("/")
 async def create_file(
-    file: UploadFile, session: SessionDep, user: CurrentUser
+    file: UploadFile,
+    session: SessionDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
 ) -> Document:
-    file_storage_service = FileStorageService()
     response = await file_storage_service.upload_file(
         session=session, user=user, file=file
     )
@@ -27,5 +30,11 @@ async def create_file(
 
 
 @router.delete("/{file_id}")
-def delete_file(file_id: int, user: CurrentUser):
-    return {"message": "Delete file"}
+def delete_file(
+    file_id: str,
+    session: SessionDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+):
+    file_storage_service.remove_file(session, user, file_id)
+    return None

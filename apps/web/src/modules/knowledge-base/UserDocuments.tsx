@@ -1,5 +1,5 @@
 import { useUserFiles } from "../../apis/queries/file-storage.queries";
-import { Card, Table } from "@mantine/core";
+import { Card, Skeleton, Table } from "@mantine/core";
 import {
   createColumnHelper,
   flexRender,
@@ -11,6 +11,8 @@ import dayjs from "dayjs";
 import { bytesToSize } from "../../utils";
 import { MIME_TYPES } from "@mantine/dropzone";
 import { Icon } from "@iconify/react";
+import { useMemo } from "react";
+import UserDocumentAction from "./UserDocumentAction";
 
 const columnHelper = createColumnHelper<IFile>();
 
@@ -25,31 +27,39 @@ const getFileIcon = (type: string) => {
   }
 };
 
-const columns = [
-  columnHelper.accessor("filename", {
-    header: "File",
-    cell: (info) => (
-      <div className="flex items-center gap-2">
-        <Icon
-          icon={getFileIcon(info.row.original.content_type)}
-          className="text-2xl"
-        />
-        <span>{info.getValue()}</span>
-      </div>
-    )
-  }),
-  columnHelper.accessor("created_at", {
-    header: "Created At",
-    cell: (info) => dayjs(info.getValue()).format("DD MMM YYYY")
-  }),
-  columnHelper.accessor("content_length", {
-    header: "Size",
-    cell: (info) => bytesToSize(info.getValue())
-  })
-];
-
 const UserDocuments = () => {
   const documents = useUserFiles();
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("filename", {
+        header: "File",
+        cell: (info) => (
+          <div className="flex items-center gap-2">
+            <Icon
+              icon={getFileIcon(info.row.original.content_type)}
+              className="text-2xl"
+            />
+            <span>{info.getValue()}</span>
+          </div>
+        )
+      }),
+      columnHelper.accessor("created_at", {
+        header: "Created At",
+        cell: (info) => dayjs(info.getValue()).format("DD MMM YYYY")
+      }),
+      columnHelper.accessor("content_length", {
+        header: "Size",
+        cell: (info) => bytesToSize(info.getValue())
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Actions",
+        cell: (info) => <UserDocumentAction document={info.row.original} />
+      })
+    ],
+    []
+  );
 
   const table = useReactTable({
     data: documents.data ?? [],
@@ -78,6 +88,34 @@ const UserDocuments = () => {
         </Table.Thead>
 
         <Table.Tbody>
+          {documents.isFetching ? (
+            <>
+              <Table.Tr>
+                <Table.Td colSpan={columns.length}>
+                  <Skeleton height={30} radius="sm" />
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Td colSpan={columns.length}>
+                  <Skeleton height={30} radius="sm" />
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Td colSpan={columns.length}>
+                  <Skeleton height={30} radius="sm" />
+                </Table.Td>
+              </Table.Tr>
+            </>
+          ) : null}
+
+          {table.getRowModel().rows.length === 0 ? (
+            <Table.Tr>
+              <Table.Td colSpan={columns.length} align="center">
+                No documents uploaded yet
+              </Table.Td>
+            </Table.Tr>
+          ) : null}
+
           {table.getRowModel().rows.map((row) => (
             <Table.Tr key={row.id}>
               {row.getVisibleCells().map((cell) => (

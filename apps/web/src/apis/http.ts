@@ -145,7 +145,8 @@ const getBody = (body?: BodyInit) => {
 };
 
 type ErrorResponse = {
-  detail?: string;
+  message?: string;
+  code?: string;
 };
 
 /**
@@ -164,7 +165,7 @@ const handleError = (
 
   if (!/^(2|3)[0-9][0-9]$/.test(String(httpStatusCode))) {
     throw new ApiResponseError(
-      (response as ErrorResponse)?.detail || "Something went wrong!!",
+      (response as ErrorResponse)?.message || "Something went wrong!!",
       httpStatusCode ?? 501
     );
   }

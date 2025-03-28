@@ -1,6 +1,10 @@
 import { FileWithPath } from "@mantine/dropzone";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getUsersFiles, uploadFile } from "../requests/files-storage.requests";
+import {
+  getUsersFiles,
+  removeFile,
+  uploadFile
+} from "../requests/files-storage.requests";
 
 export const useUploadFile = () => {
   const queryClient = useQueryClient();
@@ -24,3 +28,17 @@ export const useUserFiles = () =>
       return res;
     }
   });
+
+export const useRemoveFile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (fileId: string) => {
+      const res = await removeFile(fileId);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-files"] });
+    }
+  });
+};
