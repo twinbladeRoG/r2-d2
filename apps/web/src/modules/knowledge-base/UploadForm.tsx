@@ -5,6 +5,7 @@ import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useUploadFile } from "../../apis/queries/file-storage.queries";
+import { notifications } from "@mantine/notifications";
 
 const schema = yup.object({
   files: yup
@@ -34,17 +35,20 @@ const UploadForm = () => {
 
   const uploadFile = useUploadFile();
 
-  const handleSubmit = form.handleSubmit((data) => {
-    const file = data.files[0] as FileWithPath;
-    uploadFile.mutate(file, {
-      onSuccess: (res) => {
-        console.log("file", res);
-        form.reset();
-      },
-      onError: (err) => {
-        console.log("error", err);
-      }
-    });
+  const handleSubmit = form.handleSubmit(async (data) => {
+    for await (const file of data.files) {
+      uploadFile.mutate(file as FileWithPath, {
+        onSuccess: () => {
+          form.reset();
+        },
+        onError: (err) => {
+          notifications.show({
+            color: "red",
+            message: err.message
+          });
+        }
+      });
+    }
   });
 
   return (
