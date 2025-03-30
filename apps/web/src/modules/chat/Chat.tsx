@@ -2,20 +2,13 @@ import React, { useEffect, useState } from "react";
 import { cn } from "../../utils";
 import ChatInput from "./ChatInput";
 import { useChat, useConversation } from "../../apis/queries/chat.queries";
-import {
-  ActionIcon,
-  Divider,
-  Drawer,
-  ScrollArea,
-  Skeleton
-} from "@mantine/core";
+import { ActionIcon, Divider, Drawer, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import ConversationHistory from "./ConversationHistory";
 import { Icon } from "@iconify/react";
 import { IChatMessage, IConversation } from "../../types";
 import { v4 as uuid } from "uuid";
-import Markdown from "marked-react";
-
+import ChatMessage from "./ChatMessage";
 interface ChatProps {
   className?: string;
 }
@@ -148,16 +141,13 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
       <ScrollArea.Autosize className="mb-4">
         <div className="flex flex-col gap-y-3">
           {messages.map((message) => (
-            <div
+            <ChatMessage
               key={message.id}
-              className={cn("p-4", {
-                "self-end bg-gray-900": message.role === "user",
-                "self-start bg-gray-800": message.role === "bot",
-                "min-w-xl": message.isLoading
-              })}>
-              {message.isLoading ? <Skeleton height={40} /> : null}
-              <Markdown>{message.message}</Markdown>
-            </div>
+              message={message.message}
+              isLoading={message.isLoading}
+              isError={message.isError}
+              isUser={message.role === "user"}
+            />
           ))}
         </div>
       </ScrollArea.Autosize>

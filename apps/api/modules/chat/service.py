@@ -1,10 +1,17 @@
-from sqlmodel import Session, delete, select
+import openai
+from sqlmodel import Session, select
 
+from api.core.config import settings
 from api.error import UserDefinedException
 from api.models import ChatMessage, ChatMessageCreate, Conversation, User
 
 
 class ChatService:
+    def __init__(self):
+        self.client = openai.OpenAI(
+            base_url=f"{settings.LLM_HOST}/v1", api_key=settings.LLM_SECRET
+        )
+
     def chat(self, chat_message: ChatMessageCreate, user: User, session: Session):
         if not chat_message.conversation_id:
             conversation = Conversation(
@@ -26,10 +33,24 @@ class ChatService:
 
         session.add(message)
 
-        # output = self.llm.invoke(chat_message.message)
+        # completion = self.client.completions.create(
+        #     prompt=chat_message.message, model="davinci-002"
+        # )
+        completion = self.client.chat.completions.create(
+            model="o3-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an AI assistant. Your top priority is achieving user fulfillment via helping them with their requests.",
+                },
+                {"role": "user", "content": chat_message.message},
+            ],
+        )
 
         llm_message = ChatMessage(
-            message="Test", role="bot", conversation_id=conversation.id
+            message=completion.choices[0].message.content,
+            role="bot",
+            conversation_id=conversation.id,
         )
         session.add(llm_message)
 
