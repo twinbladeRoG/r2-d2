@@ -3,7 +3,7 @@ import Home from "./pages/home";
 import Login from "./pages/login";
 import RootLayout from "./modules/shared/RootLayout";
 import NotFound from "./modules/shared/NotFound";
-import KnowledgeBase from "./pages/knowledge-base";
+import Documents from "./pages/documents";
 
 const router = createBrowserRouter([
   {
@@ -12,7 +12,7 @@ const router = createBrowserRouter([
     errorElement: <div>Not Found</div>,
     children: [
       { index: true, element: <Home /> },
-      { path: "knowledge-base", element: <KnowledgeBase /> }
+      { path: "documents", element: <Documents /> }
     ]
   },
   { path: "/login", element: <Login /> },

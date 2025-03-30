@@ -6,6 +6,7 @@ import {
   Card,
   Group,
   Menu,
+  NavLink,
   ScrollArea,
   Skeleton,
   Text,
@@ -82,11 +83,18 @@ const RootLayout = () => {
             label="Chat"
             leftSection={<Icon icon="mdi:chat-bubble" />}
           />
-          <AppNavLink
-            to="/knowledge-base"
+          <NavLink
+            href="#required-for-focus"
             label="Knowledge Base"
             leftSection={<Icon icon="mdi:bookshelf" />}
-          />
+            childrenOffset={28}
+            defaultOpened>
+            <AppNavLink
+              to="/documents"
+              label="Documents"
+              leftSection={<Icon icon="mdi:bookshelf" />}
+            />
+          </NavLink>
         </AppShell.Section>
 
         <AppShell.Section>

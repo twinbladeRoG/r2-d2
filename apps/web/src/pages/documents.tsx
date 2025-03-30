@@ -1,7 +1,7 @@
 import UploadForm from "../modules/knowledge-base/UploadForm";
 import UserDocuments from "../modules/knowledge-base/UserDocuments";
 
-const KnowledgeBase = () => {
+const Documents = () => {
   return (
     <div>
       <UploadForm />
@@ -11,4 +11,4 @@ const KnowledgeBase = () => {
   );
 };
 
-export default KnowledgeBase;
+export default Documents;
