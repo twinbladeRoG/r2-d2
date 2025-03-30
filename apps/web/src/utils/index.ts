@@ -1,3 +1,6 @@
+import clsx, { ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 /**
  * Converts a given number of bytes into a human-readable string representation
  * with appropriate units (Bytes, KB, MB, GB, TB).
@@ -20,3 +23,5 @@ export const bytesToSize = (bytes: number) => {
   if (i == 0) return bytes + " " + sizes[i];
   return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
 };
+
+export const cn = (...classes: ClassValue[]) => twMerge(clsx(...classes));

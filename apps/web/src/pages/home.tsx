@@ -1,10 +1,7 @@
+import Chat from "../modules/chat/Chat";
+
 const Home = () => {
-  return (
-    <main>
-      <h1 className="text-2xl font-bold">Home</h1>
-      <button onClick={() => console.log("Test")}>Click</button>
-    </main>
-  );
+  return <Chat className="h-[calc(100dvh-76px-16px)] overflow-hidden" />;
 };
 
 export default Home;

@@ -14,3 +14,18 @@ export interface IFile extends IBaseEntity {
   original_filename: string;
   owner_id: string;
 }
+
+export interface IConversation extends IBaseEntity {
+  user_id: string;
+  title: string;
+}
+
+export interface IConversationWithMessages extends IConversation {
+  chat_messages: Array<IChatMessage>;
+}
+
+export interface IChatMessage extends IBaseEntity {
+  message: string;
+  role: "user" | "bot";
+  conversation_id: string;
+}

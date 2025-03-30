@@ -17,7 +17,7 @@ class FileStorageService:
     async def upload_file(self, session: Session, user: User, file: UploadFile):
         file_name = file.filename.split(".")[0]
         file_extension = file.filename.split(".")[-1]
-        new_file_name = f"{file_name}_{uuid4().hex}.{file_extension}"
+        new_file_name = f"{file_name.replace(' ', '_')}_{uuid4().hex}.{file_extension}"
         file_path = UPLOAD_PATH / user.username / new_file_name
         dir_path = file_path.parent
 

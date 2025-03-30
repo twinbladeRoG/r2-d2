@@ -8,3 +8,9 @@ export interface ILoginResponse {
   token_type: string;
   refresh_token: string;
 }
+
+export interface IChatMessageRequest {
+  message: string;
+  role: string;
+  conversation_id?: string | null | undefined;
+}

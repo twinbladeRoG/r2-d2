@@ -59,6 +59,7 @@ class User(UserBase, table=True):
     password: str
 
     documents: list["Document"] = Relationship(back_populates="owner")
+    conversations: list["Conversation"] = Relationship(back_populates="user")
 
     @field_validator("password", mode="after")
     @classmethod
@@ -100,3 +101,54 @@ class Document(DocumentBase, table=True):
 
     owner_id: uuid.UUID = Field(foreign_key="user.id")
     owner: User = Relationship(back_populates="documents")
+
+
+class ChatMessageBase(SQLModel):
+    message: str = Field(min_length=1)
+    role: str = Field(min_items=1, max_length=255)
+
+
+class ChatMessageCreate(ChatMessageBase):
+    conversation_id: uuid.UUID | None = None
+
+
+class ChatMessage(ChatMessageBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    conversation_id: uuid.UUID = Field(foreign_key="conversation.id")
+    conversation: "Conversation" = Relationship(back_populates="chat_messages")
+
+
+class ConversationBase(SQLModel):
+    title: str = Field(min_items=1, max_length=255, nullable=True, default="")
+
+
+class ConversationWithChatMessages(ConversationBase):
+    id: uuid.UUID
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+    user_id: uuid.UUID
+    chat_messages: list[ChatMessage] = []
+
+
+class Conversation(ConversationBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    user_id: uuid.UUID = Field(foreign_key="user.id")
+    user: User = Relationship(back_populates="conversations")
+
+    chat_messages: list[ChatMessage] = Relationship(
+        back_populates="conversation", cascade_delete=True
+    )

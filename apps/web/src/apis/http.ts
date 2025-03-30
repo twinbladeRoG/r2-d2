@@ -106,7 +106,7 @@ export const getToken = async () => {
  * Generate HTTP headers
  */
 export const getHeader = async (
-  additionalHeader = new Headers()
+  additionalHeader: Headers | null | undefined
 ): Promise<Headers> => {
   const headers = new Headers();
   headers.append("Accept", "application/json");
