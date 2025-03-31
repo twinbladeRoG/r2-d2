@@ -44,6 +44,32 @@ class FileStorageService:
 
             return document
 
+    def get_file_path(self, user: User, session: Session, file_id: str):
+        statement = select(Document).where(Document.id == file_id)
+        document = session.exec(statement).one()
+
+        if document is None:
+            raise UserDefinedException(
+                "Document not found",
+                "DOCUMENT_NOT_FOUND",
+            )
+
+        if document.owner_id != user.id:
+            raise UserDefinedException(
+                "You don't have permission to remove this file",
+                "DOCUMENT_PERMISSION",
+            )
+
+        file_path = UPLOAD_PATH / user.username / document.filename
+
+        if not file_path.exists():
+            raise UserDefinedException(
+                "Document does not exists",
+                "DOCUMENT_DOES_NOT_EXISTS",
+            )
+
+        return file_path
+
     def get_user_files(self, session: Session, user: User) -> list[Document]:
         statement = select(Document).where(Document.owner_id == user.id)
         results = session.exec(statement)

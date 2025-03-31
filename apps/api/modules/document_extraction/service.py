@@ -1,13 +1,18 @@
+from pathlib import Path
+
 from docling.document_converter import DocumentConverter
+from sqlmodel import Session
+
+from api.models import User
+
+from .docling_extractor import DoclingExtractor
 
 
-class DocumentExtractor:
+class DocumentExtractorService:
     def __init__(self):
-        pass
+        self.converter = DoclingExtractor()
 
-    def extract_document(self, file_name: str):
-        converter = DocumentConverter()
-        source = f"uploads/{file_name}"
-        result = converter.convert(source)  # noqa: F841
+    def extract_document(self, session: Session, user: User, file_path: Path):
+        result = self.converter.run(file_path)
 
-        return {"message": "Get all documents"}
+        return result

@@ -4,6 +4,7 @@ import Login from "./pages/login";
 import RootLayout from "./modules/shared/RootLayout";
 import NotFound from "./modules/shared/NotFound";
 import Documents from "./pages/documents";
+import Extraction from "./pages/extraction";
 
 const router = createBrowserRouter([
   {
@@ -12,7 +13,8 @@ const router = createBrowserRouter([
     errorElement: <div>Not Found</div>,
     children: [
       { index: true, element: <Home /> },
-      { path: "documents", element: <Documents /> }
+      { path: "documents", element: <Documents /> },
+      { path: "extraction", element: <Extraction /> }
     ]
   },
   { path: "/login", element: <Login /> },

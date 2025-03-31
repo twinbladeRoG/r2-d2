@@ -29,3 +29,9 @@ export interface IChatMessage extends IBaseEntity {
   role: "user" | "bot";
   conversation_id: string;
 }
+
+export interface IExtractedItem {
+  text: string;
+  page_number: number;
+  type: "table" | "figure" | "text";
+}

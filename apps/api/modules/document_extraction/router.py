@@ -1,8 +1,20 @@
 from fastapi import APIRouter
 
+from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
+
+from .dependencies import DocumentExtractorDep
+
 router = APIRouter(prefix="/document-extraction", tags=["Document Extraction"])
 
 
-@router.post("/{file_name}")
-def extract_document(file_name: str):
-    return {"message": "Get all documents"}
+@router.post("/{file_id}")
+def extract_document(
+    session: SessionDep,
+    user: CurrentUser,
+    document_extraction_service: DocumentExtractorDep,
+    file_storage_service: FileStorageServiceDep,
+    file_id: str,
+):
+    file_path = file_storage_service.get_file_path(user, session, file_id)
+    result = document_extraction_service.extract_document(session, user, file_path)
+    return result
