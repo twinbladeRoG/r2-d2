@@ -3,11 +3,12 @@ from fastapi import APIRouter
 from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
 
 from .dependencies import DocumentExtractorDep
+from .schemas import ExtractionResult
 
 router = APIRouter(prefix="/document-extraction", tags=["Document Extraction"])
 
 
-@router.post("/{file_id}")
+@router.post("/{file_id}", response_model=ExtractionResult)
 def extract_document(
     session: SessionDep,
     user: CurrentUser,

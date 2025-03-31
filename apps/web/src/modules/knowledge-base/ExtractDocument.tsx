@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useUserFiles } from "../../apis/queries/file-storage.queries";
 import { cn } from "../../utils";
 import {
@@ -17,7 +17,9 @@ import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useExtractDocument } from "../../apis/queries/extract.queries";
 import Markdown, { ReactRenderer } from "marked-react";
-import { IExtractedItem } from "../../types";
+import { IExtractedItem, IUsageLog } from "../../types";
+import Chart from "chart.js/auto";
+import dayjs from "dayjs";
 
 interface ExtractDocumentProps {
   className?: string;
@@ -37,11 +39,13 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
   });
 
   const [extractedItems, setExtractedItems] = useState<IExtractedItem[]>([]);
+  const [usageLogs, setUsage] = useState<IUsageLog[] | null>(null);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     extract.mutate(data.fileId, {
       onSuccess: (res) => {
-        setExtractedItems(res);
+        setExtractedItems(res.documents);
+        setUsage(res.usage_log);
       }
     });
   });
@@ -96,6 +100,54 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
     []
   );
 
+  const cpuChart = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    let chart: Chart | null = null;
+    if (usageLogs !== null && cpuChart.current !== null) {
+      chart = new Chart(cpuChart.current, {
+        type: "line",
+        data: {
+          labels: usageLogs.map((i) => dayjs(i.timestamp).format("mm:ss")),
+          datasets: [
+            {
+              label: "CPU Utilization",
+              data: usageLogs.map((i) => i.cpu_usage.cpu_utilization),
+              fill: false,
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.1
+            },
+            {
+              label: "CPU Memory",
+              data: usageLogs.map((i) => i.cpu_usage.memory_percentage),
+              fill: false,
+              borderColor: "rgb(75, 192, 22)",
+              tension: 0.1
+            },
+            {
+              label: `GPU Usage: ${usageLogs[0].gpu_usage[0].name}`,
+              fill: false,
+              data: usageLogs.map((i) => i.gpu_usage[0].utilization),
+              borderColor: "rgb(75, 45, 192)",
+              tension: 0.1
+            },
+            {
+              label: `GPU Memory ${usageLogs[0].gpu_usage[0].name}`,
+              fill: false,
+              data: usageLogs.map((i) => i.gpu_usage[0].memory_used),
+              borderColor: "rgb(75, 45, 192)",
+              tension: 0.1
+            }
+          ]
+        }
+      });
+    }
+
+    return () => {
+      chart?.destroy();
+    };
+  }, [usageLogs]);
+
   return (
     <section className={cn(className)}>
       <Card mb="lg">
@@ -124,11 +176,15 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
         </form>
       </Card>
 
+      <Card my="lg">
+        <canvas ref={cpuChart} className="w-full min-h-[400px]" />
+      </Card>
+
       <Card>
-        {extractedItems.map((item, index) => (
+        {extractedItems.map((item) => (
           <Card
             mb="lg"
-            key={index}
+            key={item.text}
             bg={item?.type === "table" ? "dark.9" : "gray.9"}>
             <div>
               <Markdown breaks renderer={renderer}>

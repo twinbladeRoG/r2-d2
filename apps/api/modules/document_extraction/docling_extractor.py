@@ -1,4 +1,5 @@
 import json
+import threading
 from collections import defaultdict
 from pathlib import Path
 from typing import List
@@ -9,7 +10,8 @@ from docling.datamodel.document import ConversionResult
 from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
 from docling.document_converter import DocumentConverter, PdfFormatOption
 
-from .schemas import DocumentType, ExtractedDocument
+from .schemas import DocumentType, ExtractedDocument, ExtractionResult, UsageLog
+from .utils import monitor_usage
 
 
 class DoclingExtractor:
@@ -31,6 +33,24 @@ class DoclingExtractor:
         )
 
     def run(self, file_path: str | Path):
+        stop_event = threading.Event()
+        usage_data = []
+
+        # Start monitoring thread
+        monitor_thread = threading.Thread(
+            target=monitor_usage, args=(1, stop_event, usage_data)
+        )
+        monitor_thread.start()
+
+        result = self._extract(file_path)
+
+        # Stop monitoring
+        stop_event.set()
+        monitor_thread.join()
+
+        return ExtractionResult(usage_log=usage_data, documents=result)
+
+    def _extract(self, file_path: str | Path):
         """Extract content from document"""
 
         pdf_pipeline = self._get_pdf_pipeline()
