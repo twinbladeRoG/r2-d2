@@ -80,24 +80,47 @@ class DoclingExtractor:
         with (output_dir / f"{doc_filename}.md").open("w", encoding="utf-8") as fp:
             fp.write(result_markdown)
 
-        texts = self._extract_text(result_dict)
-        tables = self._extract_tables(result_dict)
-        # self.extract_df_tables(result)
+        texts = self._extract_text(result)
+        tables = self._extract_df_tables(result)
 
         return texts + tables
 
     def _extract_df_tables(self, result: ConversionResult):
-        for table_ix, table in enumerate(result.document.tables):
+        """Uses the conversation result object to export the tables as pandas dataframe"""
+
+        tables = []
+        for table in result.document.tables:
             table_df: pd.DataFrame = table.export_to_dataframe()
-            output_dir = Path("./test/outputs")
-            doc_filename = "output"
-            # Save the table as csv
-            element_csv_filename = (
-                output_dir / f"{doc_filename}-table-{table_ix + 1}.csv"
+            markdown_table = table_df.to_markdown()
+            page_number = table.prov[0].page_no
+
+            caption_refs = [caption.get_ref().cref for caption in table.captions]
+
+            extractive_captions = []
+            for caption_ref in caption_refs:
+                text_id = caption_ref.split("/")[-1]
+                try:
+                    caption_text = result.document.texts[int(text_id)].text
+                    extractive_captions.append(caption_text)
+                except (ValueError, TypeError, IndexError) as e:
+                    continue
+
+            # join the extractive and generative captions
+            caption = "\n".join(extractive_captions)
+            markdown_table = f"{caption}\n{markdown_table}"
+
+            doc = ExtractedDocument(
+                text=markdown_table, page_number=page_number, type=DocumentType.table
             )
-            table_df.to_csv(element_csv_filename)
+            tables.append(doc)
+
+        return tables
 
     def _extract_tables(self, result_dict: dict) -> list[ExtractedDocument]:
+        """
+        @deprecated -  Uses the result dictionary to extract tables
+        """
+
         tables = []
         for table_obj in result_dict.get("tables", []):
             # convert the tables into markdown format
@@ -125,13 +148,13 @@ class DoclingExtractor:
 
         return tables
 
-    def _extract_text(self, result_dict: dict) -> list[ExtractedDocument]:
+    def _extract_text(self, result: ConversionResult) -> list[ExtractedDocument]:
         texts = []
         page_number_to_text = defaultdict(list)
 
-        for text_obj in result_dict["texts"]:
-            page_number = text_obj["prov"][0].get("page_no", 1)
-            page_number_to_text[page_number].append(text_obj["text"])
+        for text_obj in result.document.texts:
+            page_number = text_obj.prov[0].page_no
+            page_number_to_text[page_number].append(text_obj.text)
 
         for page_number, txts in page_number_to_text.items():
             doc = ExtractedDocument(
