@@ -17,32 +17,34 @@ class ExtractedDocument(BaseModel):
 
 
 class CPUUsage(BaseModel):
-    cpu_utilization: float
-    cpu_count: int
-    total_memory: float
-    available_memory: float
-    used_memory: float
-    free_memory: float
-    memory_percentage: float
+    cpu_count: int = 0
+    total_memory: float = 0.0
+    # Time Series Metrics
+    cpu_utilization: list[tuple[datetime, float]] = []
+    available_memory: list[tuple[datetime, float]] = []
+    used_memory: list[tuple[datetime, float]] = []
+    free_memory: list[tuple[datetime, float]] = []
+    memory_percentage: list[tuple[datetime, float]] = []
 
 
 class GPUUsage(BaseModel):
-    index: int
-    name: str
-    utilization: float
-    memory_used: float
-    memory_total: float
-    memory_free: float
-    memory_available: float
-    temperature: int | None
+    index: int = 0
+    uuid: str = ""
+    name: str = ""
+    memory_total: float = 0.0
+    # Time Series Metrics
+    utilization: list[tuple[datetime, float]] = []
+    memory_used: list[tuple[datetime, float]] = []
+    memory_free: list[tuple[datetime, float]] = []
+    memory_available: list[tuple[datetime, float]] = []
+    temperature: list[tuple[datetime, int | None]] = []
 
 
 class UsageLog(BaseModel):
-    timestamp: datetime
     cpu_usage: CPUUsage
-    gpu_usage: list[GPUUsage]
+    gpu_usage: list[GPUUsage] = []
 
 
 class ExtractionResult(BaseModel):
-    usage_log: list[UsageLog]
+    usage_log: UsageLog
     documents: list[ExtractedDocument]

@@ -10,7 +10,13 @@ from docling.datamodel.document import ConversionResult
 from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
 from docling.document_converter import DocumentConverter, PdfFormatOption
 
-from .schemas import DocumentType, ExtractedDocument, ExtractionResult, UsageLog
+from .schemas import (
+    CPUUsage,
+    DocumentType,
+    ExtractedDocument,
+    ExtractionResult,
+    UsageLog,
+)
 from .utils import monitor_usage
 
 
@@ -34,7 +40,9 @@ class DoclingExtractor:
 
     def run(self, file_path: str | Path):
         stop_event = threading.Event()
-        usage_data = []
+        usage_data = UsageLog(
+            cpu_usage=CPUUsage(cpu_count=0, total_memory=0), gpu_usage=[]
+        )
 
         # Start monitoring thread
         monitor_thread = threading.Thread(
