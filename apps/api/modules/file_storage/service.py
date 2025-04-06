@@ -9,16 +9,27 @@ from sqlmodel import Session, delete, select
 
 from api.error import UserDefinedException
 from api.models import Document, DocumentBase, User
+from api.modules.document_extraction.schemas import ExtractionStatus
 
 UPLOAD_PATH = Path("uploads")
 
 
 class FileStorageService:
+    @staticmethod
+    def get_local_file_path(username: str, file_name: str):
+        """
+        Get the file path for a given file name.
+        """
+        file_path = UPLOAD_PATH / username / file_name
+
+        return file_path
+
     async def upload_file(self, session: Session, user: User, file: UploadFile):
         file_name = file.filename.split(".")[0]
         file_extension = file.filename.split(".")[-1]
         new_file_name = f"{file_name.replace(' ', '_')}_{uuid4().hex}.{file_extension}"
-        file_path = UPLOAD_PATH / user.username / new_file_name
+
+        file_path = self.get_local_file_path(user.username, new_file_name)
         dir_path = file_path.parent
 
         if not dir_path.exists():
@@ -35,6 +46,7 @@ class FileStorageService:
                 original_filename=file.filename,
                 content_type=file.content_type,
                 content_length=len(content),
+                extraction_status=ExtractionStatus.PENDING,
             )
 
             document = Document.model_validate(document, update={"owner_id": user.id})
@@ -65,7 +77,7 @@ class FileStorageService:
     def get_file_path(self, user: User, session: Session, file_id: str):
         document = self.get_file(user, session, file_id)
 
-        file_path = UPLOAD_PATH / user.username / document.filename
+        file_path = self.get_local_file_path(user.username, document.filename)
 
         if not file_path.exists():
             raise UserDefinedException(

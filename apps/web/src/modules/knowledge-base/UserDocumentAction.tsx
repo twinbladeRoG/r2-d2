@@ -17,11 +17,11 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
 
   const handleRemoveFile = () => {
     modals.openConfirmModal({
-      title: "Are you sure you want to logout?",
+      title: "Are you sure you want to delete is file?",
       children: (
         <Text size="sm">
-          This action will log you out of your account and you will need to log
-          in again to access the application.
+          This action cannot be undone. All data related to this file will be
+          lost.
         </Text>
       ),
       labels: { confirm: "Confirm", cancel: "Cancel" },

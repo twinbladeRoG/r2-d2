@@ -33,11 +33,16 @@ class KafkaConsumerService:
                         file_storage_service = FileStorageService()
 
                         user = user_service.get_user_by_id(session, payload.user_id)
+                        document = file_storage_service.get_file(
+                            user, session, payload.file_id
+                        )
                         file_path = file_storage_service.get_file_path(
                             user, session, payload.file_id
                         )
 
-                        document_service.extract_document(session, user, file_path)
+                        document_service.extract_document(
+                            session, user, document, file_path
+                        )
 
                 except Exception as e:
                     logger.error(

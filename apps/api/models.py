@@ -2,10 +2,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import EmailStr, field_validator
-from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
+from pydantic import EmailStr, PositiveInt, field_validator
+from sqlmodel import JSON, Column, DateTime, Enum, Field, Relationship, SQLModel
 
 from api.core.security import get_password_hash
+from api.modules.document_extraction.schemas import DocumentType, ExtractionStatus
 
 
 def utcnow():
@@ -88,6 +89,9 @@ class DocumentBase(SQLModel):
     original_filename: str = Field(min_length=1, max_length=255)
     content_type: str = Field(min_length=1, max_length=255)
     content_length: int = Field(ge=0)
+    extraction_status: ExtractionStatus = Field(
+        sa_column=Column(Enum(ExtractionStatus), nullable=False)
+    )
 
 
 class Document(DocumentBase, table=True):
@@ -101,6 +105,13 @@ class Document(DocumentBase, table=True):
 
     owner_id: uuid.UUID = Field(foreign_key="user.id")
     owner: User = Relationship(back_populates="documents")
+
+    extracted_sections: list["ExtractedSection"] = Relationship(
+        back_populates="document", cascade_delete=True
+    )
+    extraction_usage_logs: list["ExtractionUsageLog"] = Relationship(
+        back_populates="document", cascade_delete=True
+    )
 
 
 class ChatMessageBase(SQLModel):
@@ -152,3 +163,45 @@ class Conversation(ConversationBase, table=True):
     chat_messages: list[ChatMessage] = Relationship(
         back_populates="conversation", cascade_delete=True
     )
+
+
+class ExtractedSectionBase(SQLModel):
+    page_number: PositiveInt
+    type: DocumentType = Field(sa_column=Column(Enum(DocumentType), nullable=False))
+    content: str = Field(min_length=1)
+
+
+class ExtractedSection(ExtractedSectionBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    document_id: uuid.UUID = Field(foreign_key="document.id", ondelete="CASCADE")
+    document: Document = Relationship(back_populates="extracted_sections")
+
+
+class ExtractionUsageLog(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    usage_log: dict = Field(
+        sa_column=Column(JSON, nullable=False),
+        default={},
+    )
+
+    document_id: uuid.UUID = Field(foreign_key="document.id", ondelete="CASCADE")
+    document: Document = Relationship(back_populates="extraction_usage_logs")
+
+
+class ExtractionResult(SQLModel):
+    sections: list[ExtractedSection] = []
+    usage_log: ExtractionUsageLog

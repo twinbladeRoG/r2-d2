@@ -38,7 +38,7 @@ export const options = {
 
 interface ResourceChartsProps {
   className?: string;
-  usage: IUsageLog;
+  usage: IUsageLog["usage_log"];
 }
 
 const ResourceCharts: React.FC<ResourceChartsProps> = ({

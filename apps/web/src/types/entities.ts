@@ -1,4 +1,4 @@
-import type { IBaseEntity } from "./common";
+import type { IBaseEntity, ObjectValues } from "./common";
 
 export interface IUser extends IBaseEntity {
   username: string;
@@ -7,12 +7,22 @@ export interface IUser extends IBaseEntity {
   last_name: string;
 }
 
+export const EXTRACTION_STATUS = {
+  PENDING: "pending",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+  FAILED: "failed"
+} as const;
+
+export type ExtractionStatus = ObjectValues<typeof EXTRACTION_STATUS>;
+
 export interface IFile extends IBaseEntity {
   filename: string;
   content_type: string;
   content_length: number;
   original_filename: string;
   owner_id: string;
+  extraction_status: ExtractionStatus;
 }
 
 export interface IConversation extends IBaseEntity {
@@ -28,12 +38,6 @@ export interface IChatMessage extends IBaseEntity {
   message: string;
   role: "user" | "bot";
   conversation_id: string;
-}
-
-export interface IExtractedItem {
-  text: string;
-  page_number: number;
-  type: "table" | "figure" | "text";
 }
 
 export interface ICpuUsage {
@@ -58,7 +62,17 @@ export interface IGpuUsage {
   temperature: Array<[string, number]>;
 }
 
-export interface IUsageLog {
-  cpu_usage: ICpuUsage;
-  gpu_usage: Array<IGpuUsage>;
+export interface IUsageLog extends IBaseEntity {
+  document_id: string;
+  usage_log: {
+    cpu_usage: ICpuUsage;
+    gpu_usage: Array<IGpuUsage>;
+  };
+}
+
+export interface IExtractedSection extends IBaseEntity {
+  type: "text" | "table" | "figure";
+  page_number: number;
+  content: string;
+  document_id: string;
 }

@@ -114,7 +114,7 @@ class DoclingExtractor:
             markdown_table = f"{caption}\n{markdown_table}"
 
             doc = ExtractedDocument(
-                text=markdown_table, page_number=page_number, type=DocumentType.table
+                text=markdown_table, page_number=page_number, type=DocumentType.TABLE
             )
             tables.append(doc)
 
@@ -146,7 +146,7 @@ class DoclingExtractor:
             page_number = table_obj["prov"][0].get("page_no", 1)
 
             doc = ExtractedDocument(
-                text=markdown_table, page_number=page_number, type=DocumentType.table
+                text=markdown_table, page_number=page_number, type=DocumentType.TABLE
             )
             tables.append(doc)
 
@@ -162,7 +162,7 @@ class DoclingExtractor:
 
         for page_number, txts in page_number_to_text.items():
             doc = ExtractedDocument(
-                text="\n".join(txts), page_number=page_number, type=DocumentType.text
+                text="\n".join(txts), page_number=page_number, type=DocumentType.TEXT
             )
             texts.append(doc)
 

@@ -1,12 +1,18 @@
 import { useUserFiles } from "../../apis/queries/file-storage.queries";
-import { Card, Skeleton, Table } from "@mantine/core";
+import {
+  Badge,
+  Card,
+  DefaultMantineColor,
+  Skeleton,
+  Table
+} from "@mantine/core";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { IFile } from "../../types";
+import { ExtractionStatus, IFile } from "../../types";
 import dayjs from "dayjs";
 import { bytesToSize } from "../../utils";
 import { MIME_TYPES } from "@mantine/dropzone";
@@ -30,6 +36,21 @@ const getFileIcon = (type: string) => {
 const UserDocuments = () => {
   const documents = useUserFiles();
 
+  const getStatusColor = (status: ExtractionStatus): DefaultMantineColor => {
+    switch (status) {
+      case "pending":
+        return "yellow";
+      case "in_progress":
+        return "blue";
+      case "completed":
+        return "green";
+      case "failed":
+        return "red";
+      default:
+        return "gray";
+    }
+  };
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("filename", {
@@ -42,6 +63,14 @@ const UserDocuments = () => {
             />
             <span>{info.getValue()}</span>
           </div>
+        )
+      }),
+      columnHelper.accessor("extraction_status", {
+        header: "Extraction Status",
+        cell: (info) => (
+          <Badge color={getStatusColor(info.getValue())}>
+            {info.getValue()}
+          </Badge>
         )
       }),
       columnHelper.accessor("created_at", {

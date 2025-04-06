@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
 from api.modules.kafka.dependencies import KafkaProducerDep
 
 from .dependencies import DocumentExtractorDep
-from .schemas import ExtractionResult
 
 router = APIRouter(prefix="/document-extraction", tags=["Document Extraction"])
 
 
-@router.post("/{file_id}", response_model=ExtractionResult)
+@router.post("/{file_id}")
 def extract_document(
     session: SessionDep,
     user: CurrentUser,
@@ -17,8 +16,11 @@ def extract_document(
     file_storage_service: FileStorageServiceDep,
     file_id: str,
 ):
+    document = file_storage_service.get_file(user, session, file_id)
     file_path = file_storage_service.get_file_path(user, session, file_id)
-    result = document_extraction_service.extract_document(session, user, file_path)
+    result = document_extraction_service.extract_document(
+        session, user, document, file_path
+    )
     return result
 
 

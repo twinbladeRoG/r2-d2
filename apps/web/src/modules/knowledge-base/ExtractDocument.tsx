@@ -21,7 +21,7 @@ import {
   useScheduleExtractDocument
 } from "../../apis/queries/extract.queries";
 import Markdown, { ReactRenderer } from "marked-react";
-import { IExtractedItem, IUsageLog } from "../../types";
+import { IExtractedSection, IUsageLog } from "../../types";
 import ResourceCharts from "./ResourceCharts";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -44,15 +44,15 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
     defaultValues: { fileId: undefined }
   });
 
-  const [extractedItems, setExtractedItems] = useState<IExtractedItem[]>([]);
-  const [usageLogs, setUsage] = useState<IUsageLog | null>(null);
+  const [extractedItems, setExtractedItems] = useState<IExtractedSection[]>([]);
+  const [usageLog, setUsage] = useState<IUsageLog | null>(null);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     setUsage(null);
     setExtractedItems([]);
     extract.mutate(data.fileId, {
       onSuccess: (res) => {
-        setExtractedItems(res.documents);
+        setExtractedItems(res.sections);
         setUsage(res.usage_log);
       }
     });
@@ -171,7 +171,7 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
         </form>
       </Card>
 
-      {usageLogs ? (
+      {usageLog ? (
         <>
           <Button
             variant="light"
@@ -183,7 +183,7 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
 
           <Collapse in={showResource}>
             <Card my="lg">
-              <ResourceCharts usage={usageLogs} />
+              <ResourceCharts usage={usageLog.usage_log} />
             </Card>
           </Collapse>
         </>
@@ -193,11 +193,11 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
         {extractedItems.map((item) => (
           <Card
             mb="lg"
-            key={item.text}
+            key={item.id}
             bg={item?.type === "table" ? "dark.9" : "gray.9"}>
             <div>
               <Markdown breaks renderer={renderer}>
-                {item.text}
+                {item.content}
               </Markdown>
             </div>
 

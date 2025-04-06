@@ -3,3 +3,5 @@ export interface IBaseEntity {
   created_at: string;
   updated_at: string;
 }
+
+export type ObjectValues<T> = T[keyof T];
