@@ -5,6 +5,7 @@ import RootLayout from "./modules/shared/RootLayout";
 import NotFound from "./modules/shared/NotFound";
 import Documents from "./pages/documents";
 import Extraction from "./pages/extraction";
+import ExtractionStatus from "./modules/knowledge-base/ExtractionStatus";
 
 const router = createBrowserRouter([
   {
@@ -14,7 +15,13 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "documents", element: <Documents /> },
-      { path: "extraction", element: <Extraction /> }
+      {
+        path: "extraction",
+        children: [
+          { index: true, element: <Extraction /> },
+          { path: ":id", element: <ExtractionStatus /> }
+        ]
+      }
     ]
   },
   { path: "/login", element: <Login /> },

@@ -52,7 +52,7 @@ class UsageLog(BaseModel):
     gpu_usage: list[GPUUsage] = []
 
 
-class ExtractionResult(BaseModel):
+class DoclingExtractionResult(BaseModel):
     usage_log: UsageLog
     documents: list[ExtractedDocument]
 
@@ -60,3 +60,4 @@ class ExtractionResult(BaseModel):
 class ScheduledExtraction(BaseModel):
     file_id: str
     user_id: str
+    status: ExtractionStatus = ExtractionStatus.PENDING

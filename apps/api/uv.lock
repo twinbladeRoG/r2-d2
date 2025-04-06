@@ -1814,6 +1814,7 @@ dependencies = [
     { name = "python-multipart" },
     { name = "sqlmodel" },
     { name = "theflow" },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -1843,6 +1844,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
     { name = "theflow", specifier = ">=0.8.6" },
+    { name = "websockets", specifier = ">=15.0" },
 ]
 
 [package.metadata.requires-dev]

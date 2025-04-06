@@ -15,9 +15,9 @@ from api.logger import logger
 
 from .schemas import (
     CPUUsage,
+    DoclingExtractionResult,
     DocumentType,
     ExtractedDocument,
-    ExtractionResult,
     UsageLog,
 )
 from .utils import monitor_usage
@@ -58,7 +58,7 @@ class DoclingExtractor:
         stop_event.set()
         monitor_thread.join()
 
-        return ExtractionResult(usage_log=usage_data, documents=result)
+        return DoclingExtractionResult(usage_log=usage_data, documents=result)
 
     def _extract(self, file_path: str | Path):
         """Extract content from document"""

@@ -39,7 +39,7 @@ async def consume(consumer: AIOKafkaConsumer):
             logger.info(f"Received message from topic: {message.topic}")
             value = json.loads(message.value.decode("utf-8"))
             pprint(value)  # noqa: T203
-            kafka_consumer_service.consume_message(message)
+            await kafka_consumer_service.consume_message(message)
     except asyncio.CancelledError as e:
         await consumer.stop()
     finally:

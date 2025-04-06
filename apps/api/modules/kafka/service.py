@@ -11,10 +11,11 @@ from api.modules.file_storage.service import FileStorageService
 from api.modules.users.service import UserService
 
 from .enums import KafkaTopic
+from .producer import create_kafka_producer
 
 
 class KafkaConsumerService:
-    def consume_message(self, message: ConsumerRecord):
+    async def consume_message(self, message: ConsumerRecord):
         """
         Process the consumed message.
         """
@@ -40,9 +41,14 @@ class KafkaConsumerService:
                             user, session, payload.file_id
                         )
 
-                        document_service.extract_document(
-                            session, user, document, file_path
+                        kafka_producer = create_kafka_producer()
+                        await kafka_producer.start()
+
+                        await document_service.extract_document(
+                            session, user, document, kafka_producer, file_path
                         )
+
+                        await kafka_producer.stop()
 
                 except Exception as e:
                     logger.error(

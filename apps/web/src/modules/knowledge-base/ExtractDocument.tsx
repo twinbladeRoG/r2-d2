@@ -25,6 +25,7 @@ import { IExtractedSection, IUsageLog } from "../../types";
 import ResourceCharts from "./ResourceCharts";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { useNavigate } from "react-router-dom";
 
 interface ExtractDocumentProps {
   className?: string;
@@ -38,6 +39,7 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
   const documents = useUserFiles();
   const extract = useExtractDocument();
   const scheduleExtraction = useScheduleExtractDocument();
+  const navigate = useNavigate();
 
   const form = useForm({
     resolver: yupResolver(schema),
@@ -124,6 +126,7 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
             message: "Extraction scheduled successfully",
             color: "green"
           });
+          navigate(`/extraction/${fileId}`);
         }
       });
     } catch {
