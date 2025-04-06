@@ -1,3 +1,7 @@
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,9 +9,36 @@ from fastapi.responses import JSONResponse
 
 from api.core.config import settings
 from api.error import UserDefinedException
+from api.modules.kafka.consumer import consume, create_kafka_consumer
+from api.modules.kafka.enums import KafkaTopic
 from api.routes.main import api_router
 
-app = FastAPI()
+logger = logging.getLogger("uvicorn")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for the FastAPI application.
+    """
+    loop = asyncio.get_event_loop()
+    consumer = create_kafka_consumer(
+        topic=KafkaTopic.EXTRACT_DOCUMENT.value, group_id="extract", loop=loop
+    )
+    task = asyncio.create_task(consume(consumer))
+    try:
+        yield
+    except asyncio.CancelledError:
+        logger.error("Lifespan task cancelled")
+        pass
+    except Exception as e:
+        logger.error(f"Error in lifespan: {e}")
+    finally:
+        await consumer.stop()
+        task.cancel()
+
+
+app = FastAPI(lifespan=lifespan)
 
 if settings.all_cors_origins:
     app.add_middleware(

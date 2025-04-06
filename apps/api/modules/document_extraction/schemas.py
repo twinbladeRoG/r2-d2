@@ -48,3 +48,8 @@ class UsageLog(BaseModel):
 class ExtractionResult(BaseModel):
     usage_log: UsageLog
     documents: list[ExtractedDocument]
+
+
+class ScheduledExtraction(BaseModel):
+    file_id: str
+    user_id: str

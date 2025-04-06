@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     LLM_HOST: str
     LLM_SECRET: str
 
+    KAFKA_BOOTSTRAP_SERVER: str
+
+    LOG_LEVEL: Literal["INFO", "DEBUG", "ERROR", "WARNING", "CRITICAL"] = "INFO"
+
+    @computed_field
+    @property
+    def KAFKA_BROKERS(self) -> list[str]:
+        return self.KAFKA_BOOTSTRAP_SERVER.split(",")
+
     @computed_field
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:

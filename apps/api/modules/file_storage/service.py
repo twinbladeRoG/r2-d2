@@ -44,7 +44,7 @@ class FileStorageService:
 
             return document
 
-    def get_file_path(self, user: User, session: Session, file_id: str):
+    def get_file(self, user: User, session: Session, file_id: str):
         statement = select(Document).where(Document.id == file_id)
         document = session.exec(statement).one()
 
@@ -59,6 +59,11 @@ class FileStorageService:
                 "You don't have permission to remove this file",
                 "DOCUMENT_PERMISSION",
             )
+
+        return document
+
+    def get_file_path(self, user: User, session: Session, file_id: str):
+        document = self.get_file(user, session, file_id)
 
         file_path = UPLOAD_PATH / user.username / document.filename
 

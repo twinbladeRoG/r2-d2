@@ -1,13 +1,22 @@
-from kafka import KafkaProducer
+import asyncio
+import json
+
+from aiokafka import AIOKafkaProducer
+
+from api.core.config import settings
 
 
-def main():
-    producer = KafkaProducer(
-        bootstrap_servers="localhost:9092",
+def create_kafka_producer():
+    """
+    Create a Kafka producer that sends messages to the specified topic.
+    """
+    loop = asyncio.get_event_loop()
+    servers = settings.KAFKA_BROKERS
+
+    producer = AIOKafkaProducer(
+        bootstrap_servers=servers,
+        value_serializer=lambda m: json.dumps(m).encode("ascii"),
+        loop=loop,
     )
 
-    producer.send("foobar", b"some_message_bytes")
-
-
-if __name__ == "__main__":
-    main()
+    return producer

@@ -16,11 +16,15 @@ import {
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useExtractDocument } from "../../apis/queries/extract.queries";
+import {
+  useExtractDocument,
+  useScheduleExtractDocument
+} from "../../apis/queries/extract.queries";
 import Markdown, { ReactRenderer } from "marked-react";
 import { IExtractedItem, IUsageLog } from "../../types";
 import ResourceCharts from "./ResourceCharts";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 
 interface ExtractDocumentProps {
   className?: string;
@@ -33,6 +37,7 @@ const schema = yup.object({
 const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
   const documents = useUserFiles();
   const extract = useExtractDocument();
+  const scheduleExtraction = useScheduleExtractDocument();
 
   const form = useForm({
     resolver: yupResolver(schema),
@@ -43,6 +48,8 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
   const [usageLogs, setUsage] = useState<IUsageLog | null>(null);
 
   const handleSubmit = form.handleSubmit(async (data) => {
+    setUsage(null);
+    setExtractedItems([]);
     extract.mutate(data.fileId, {
       onSuccess: (res) => {
         setExtractedItems(res.documents);
@@ -103,6 +110,27 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
 
   const [showResource, handleResource] = useDisclosure();
 
+  const handleScheduleExtraction = async () => {
+    try {
+      const isValid = await form.trigger("fileId");
+
+      if (!isValid) return;
+
+      const fileId = form.getValues("fileId");
+
+      scheduleExtraction.mutate(fileId, {
+        onSuccess: () => {
+          notifications.show({
+            message: "Extraction scheduled successfully",
+            color: "green"
+          });
+        }
+      });
+    } catch {
+      //
+    }
+  };
+
   return (
     <section className={cn(className)}>
       <Card mb="lg">
@@ -125,8 +153,20 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
             )}
           />
 
-          <Button type="submit" loading={extract.isPending}>
+          <Button
+            type="submit"
+            loading={extract.isPending}
+            disabled={scheduleExtraction.isPending}>
             Extract
+          </Button>
+
+          <Button
+            type="button"
+            ml="md"
+            loading={scheduleExtraction.isPending}
+            onClick={handleScheduleExtraction}
+            color="indigo">
+            Schedule Extraction
           </Button>
         </form>
       </Card>

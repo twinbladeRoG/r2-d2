@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 from collections import defaultdict
 from pathlib import Path
@@ -9,6 +10,8 @@ from docling.datamodel.base_models import InputFormat
 from docling.datamodel.document import ConversionResult
 from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
 from docling.document_converter import DocumentConverter, PdfFormatOption
+
+from api.logger import logger
 
 from .schemas import (
     CPUUsage,
@@ -21,9 +24,6 @@ from .utils import monitor_usage
 
 
 class DoclingExtractor:
-    def __init__(self):
-        pass
-
     def _get_pdf_pipeline(self):
         pipeline_options = PdfPipelineOptions(do_table_structure=True)
         # uses text cells predicted from table structure model
@@ -50,7 +50,9 @@ class DoclingExtractor:
         )
         monitor_thread.start()
 
+        logger.info(f"Extracting document: {file_path}")
         result = self._extract(file_path)
+        logger.info(f"Document extraction completed: {file_path}")
 
         # Stop monitoring
         stop_event.set()
@@ -68,7 +70,9 @@ class DoclingExtractor:
         result_dict = result.document.export_to_dict()
         result_markdown = result.document.export_to_markdown()
 
-        output_dir = Path("./test/outputs")
+        directory_path = os.path.realpath(__file__)
+        path, _ = os.path.split(directory_path)
+        output_dir = Path(path) / "test" / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
         doc_filename = "output"
 
