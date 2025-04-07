@@ -1,4 +1,5 @@
 import type { IBaseEntity, ObjectValues } from "./common";
+import { EXTRACTION_STATUS } from "./enums";
 
 export interface IUser extends IBaseEntity {
   username: string;
@@ -6,13 +7,6 @@ export interface IUser extends IBaseEntity {
   first_name: string;
   last_name: string;
 }
-
-export const EXTRACTION_STATUS = {
-  PENDING: "pending",
-  IN_PROGRESS: "in_progress",
-  COMPLETED: "completed",
-  FAILED: "failed"
-} as const;
 
 export type ExtractionStatus = ObjectValues<typeof EXTRACTION_STATUS>;
 

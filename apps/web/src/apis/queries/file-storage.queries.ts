@@ -1,6 +1,7 @@
 import { FileWithPath } from "@mantine/dropzone";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  getFile,
   getUsersFiles,
   removeFile,
   uploadFile
@@ -42,3 +43,12 @@ export const useRemoveFile = () => {
     }
   });
 };
+
+export const useFile = (fileId: string) =>
+  useQuery({
+    queryKey: ["file", fileId],
+    queryFn: async () => {
+      const res = await getFile(fileId);
+      return res;
+    }
+  });

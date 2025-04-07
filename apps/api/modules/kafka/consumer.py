@@ -5,6 +5,8 @@ from pprint import pprint
 
 from aiokafka import AIOKafkaConsumer
 
+from api.core.config import settings
+
 from .service import KafkaConsumerService
 
 logger = logging.getLogger("uvicorn")
@@ -18,7 +20,7 @@ def create_kafka_consumer(
     """
     consumer = AIOKafkaConsumer(
         topic,
-        bootstrap_servers="localhost:9092",
+        bootstrap_servers=settings.KAFKA_BROKERS,
         group_id=group_id,
         loop=loop,
     )

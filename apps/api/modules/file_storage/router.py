@@ -29,6 +29,17 @@ async def create_file(
     return response
 
 
+@router.get("/{file_id}")
+def get_file(
+    session: SessionDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+    file_id: str,
+):
+    document = file_storage_service.get_file(user, session, file_id)
+    return document
+
+
 @router.delete("/{file_id}")
 def delete_file(
     file_id: str,

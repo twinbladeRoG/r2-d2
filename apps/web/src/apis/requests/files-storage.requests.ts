@@ -15,3 +15,6 @@ export const uploadFile = (file: File | FileWithPath) => {
 
 export const removeFile = (fileId: string) =>
   http.delete(`/api/v1/file-storage/${fileId}`);
+
+export const getFile = (fileId: string) =>
+  http.get<IFile>(`/api/v1/file-storage/${fileId}`);

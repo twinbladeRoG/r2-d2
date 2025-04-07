@@ -61,7 +61,7 @@ const UserDocuments = () => {
               icon={getFileIcon(info.row.original.content_type)}
               className="text-2xl"
             />
-            <span>{info.getValue()}</span>
+            <span className="break-all">{info.getValue()}</span>
           </div>
         )
       }),

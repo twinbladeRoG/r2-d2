@@ -94,9 +94,8 @@ class DocumentExtractorService:
                 ExtractionStatus.IN_PROGRESS,
             )
 
-            await asyncio.sleep(2)
-
             result = self.converter.run(file_path)
+
             await self._change_document_status(
                 session,
                 kafka_producer,

@@ -68,8 +68,9 @@ async def file_extraction_status(
 
     user = get_current_user(session, token)
     document = file_storage_service.get_file(user, session, file_id)
+    loop = asyncio.get_event_loop()
     consumer = create_kafka_consumer(
-        KafkaTopic.EXTRACT_DOCUMENT_STATUS.value, group_id="extract"
+        KafkaTopic.EXTRACT_DOCUMENT_STATUS.value, group_id="extract", loop=loop
     )
 
     try:
@@ -87,7 +88,6 @@ async def file_extraction_status(
             await websocket.close(1000, "Document extraction is completed")
         else:
             async for message in consumer:
-                logger.info(f"Received message from topic: {message.topic}")
                 value = json.loads(message.value.decode("utf-8"))
                 pprint(value)  # noqa: T203
                 try:
