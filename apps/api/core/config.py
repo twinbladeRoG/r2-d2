@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     def KAFKA_BROKERS(self) -> list[str]:
         return self.KAFKA_BOOTSTRAP_SERVER.split(",")
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+
     @computed_field
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:

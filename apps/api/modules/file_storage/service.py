@@ -122,3 +122,13 @@ class FileStorageService:
         remove_statement = delete(Document).where(Document.id == file_id)
         session.exec(remove_statement)
         session.commit()
+
+    def update_job_id(self, session: Session, user: User, file_id: str, job_id: str):
+        document = self.get_file(user, session, file_id)
+
+        document.job_id = job_id
+        session.add(document)
+        session.commit()
+        session.refresh(document)
+
+        return document

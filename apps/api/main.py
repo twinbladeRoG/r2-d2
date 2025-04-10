@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
@@ -9,11 +8,10 @@ from fastapi.responses import JSONResponse
 
 from api.core.config import settings
 from api.error import UserDefinedException
+from api.logger import logger
 from api.modules.kafka.consumer import consume, create_kafka_consumer
 from api.modules.kafka.enums import KafkaTopic
 from api.routes.main import api_router
-
-logger = logging.getLogger("uvicorn")
 
 
 @asynccontextmanager
@@ -22,9 +20,7 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for the FastAPI application.
     """
     loop = asyncio.get_event_loop()
-    consumer = create_kafka_consumer(
-        topic=KafkaTopic.EXTRACT_DOCUMENT.value, group_id="extract", loop=loop
-    )
+    consumer = create_kafka_consumer(KafkaTopic.EXTRACT_DOCUMENT.value, loop=loop)
     task = asyncio.create_task(consume(consumer))
     try:
         yield

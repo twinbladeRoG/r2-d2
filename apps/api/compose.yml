@@ -13,12 +13,16 @@ services:
   adminer:
     image: adminer
     restart: always
+    depends_on:
+      - db
     ports:
       - 8080:8080
 
   pgadmin:
     image: dpage/pgadmin4
     restart: always
+    depends_on:
+      - db
     ports:
       - 5050:80
     env_file: .env
@@ -70,6 +74,32 @@ services:
     depends_on:
       - kafka1
       - zoo1
+  
+  redis:
+    image: docker.io/bitnami/redis:7.4
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+  
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    restart: always
+    depends_on:
+      - redis
+    environment:
+    - REDIS_HOSTS=local:redis:6379
+    ports:
+    - "8082:8081"
+    user: redis
 
 volumes:
   pgdata:
+  redis_data:
+    driver: local

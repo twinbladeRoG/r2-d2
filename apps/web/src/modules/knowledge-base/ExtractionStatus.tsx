@@ -8,7 +8,7 @@ import {
   Title
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { useFile } from "../../apis/queries/file-storage.queries";
@@ -81,6 +81,12 @@ const ExtractionStatus = () => {
         return "gray";
     }
   }, [status]);
+
+  useEffect(() => {
+    if (status === null && document.data !== undefined) {
+      setStatus(document.data.extraction_status);
+    }
+  }, [status, document.data]);
 
   return (
     <section>

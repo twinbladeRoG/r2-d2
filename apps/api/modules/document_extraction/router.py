@@ -1,9 +1,11 @@
 import asyncio
 import json
+from datetime import datetime
 from pathlib import Path
 from pprint import pprint
 
 from fastapi import APIRouter, WebSocket, WebSocketException
+from pydantic import ValidationError
 
 from api.dependencies import (
     CurrentUser,
@@ -20,7 +22,6 @@ from .dependencies import DocumentExtractorDep
 from .schemas import ExtractionStatus, ScheduledExtraction
 
 router = APIRouter(prefix="/document-extraction", tags=["Document Extraction"])
-from pydantic import ValidationError
 
 
 @router.post("/{file_id}")
@@ -64,17 +65,22 @@ async def file_extraction_status(
     session: SessionDep,
     token: str | None = None,
 ):
+    logger.info("> Websocket starting")
     await websocket.accept()
+    logger.info("> Websocket started")
 
     user = get_current_user(session, token)
     document = file_storage_service.get_file(user, session, file_id)
-    loop = asyncio.get_event_loop()
+
     consumer = create_kafka_consumer(
-        KafkaTopic.EXTRACT_DOCUMENT_STATUS.value, group_id="extract", loop=loop
+        KafkaTopic.EXTRACT_DOCUMENT_STATUS.value, loop=None
     )
 
     try:
         await consumer.start()
+        logger.info("> Consumer started")
+
+        logger.info(f"> Document Status: {document.extraction_status}")
 
         if document.extraction_status == ExtractionStatus.COMPLETED:
             message = ScheduledExtraction.model_validate(
@@ -86,14 +92,32 @@ async def file_extraction_status(
             )
             await websocket.send_json(message.model_dump(mode="json"))
             await websocket.close(1000, "Document extraction is completed")
+        elif document.extraction_status == ExtractionStatus.FAILED:
+            message = ScheduledExtraction.model_validate(
+                {
+                    "user_id": user.id.hex,
+                    "file_id": document.id.hex,
+                    "status": ExtractionStatus.FAILED,
+                }
+            )
+            await websocket.send_json(message.model_dump(mode="json"))
+            await websocket.close(1000, "Document extraction failed")
         else:
             async for message in consumer:
+                timestamp = datetime.now().strftime("%I:%M%p")
+                logger.info(
+                    f"[{timestamp}] Received message from topic: {message.topic}"
+                )
                 value = json.loads(message.value.decode("utf-8"))
                 pprint(value)  # noqa: T203
                 try:
                     validated_message = ScheduledExtraction.model_validate(value)
                     await websocket.send_json(value)
-                    if validated_message.status == ExtractionStatus.COMPLETED:
+
+                    if validated_message.status in [
+                        ExtractionStatus.COMPLETED,
+                        ExtractionStatus.FAILED,
+                    ]:
                         await consumer.stop()
                         await websocket.close(1000, "Document extraction is completed")
 
@@ -104,6 +128,8 @@ async def file_extraction_status(
                     logger.error(value)
 
     except asyncio.CancelledError as e:
+        logger.error(f"> Error: {e}")
+
         await consumer.stop()
     finally:
         await consumer.stop()

@@ -1,7 +1,5 @@
 import asyncio
-import json
 from pathlib import Path
-from uuid import UUID
 
 from aiokafka import AIOKafkaProducer
 from sqlmodel import Session
@@ -41,6 +39,8 @@ class DocumentExtractorService:
         message = ScheduledExtraction.model_validate(
             {"file_id": document.id.hex, "user_id": user_id, "status": status.value}
         )
+
+        logger.info(f">>>> Change Status to: {status.value}")
 
         await producer.send_and_wait(
             KafkaTopic.EXTRACT_DOCUMENT_STATUS.value,
@@ -104,6 +104,10 @@ class DocumentExtractorService:
                 ExtractionStatus.COMPLETED,
             )
 
+            logger.info("EXTRACTION COMPLETE")
+
+            await asyncio.sleep(10)
+
             response = self._get_sections(session, document, result)
 
             return response
@@ -144,6 +148,7 @@ class DocumentExtractorService:
                     "status": ExtractionStatus.IN_PROGRESS.value,
                 }
             )
+
             await kafka_producer.send_and_wait(
                 KafkaTopic.EXTRACT_DOCUMENT.value, value=message.model_dump(mode="json")
             )
