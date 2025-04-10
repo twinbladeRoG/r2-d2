@@ -5,6 +5,7 @@
     "scripts": {
         "predev": "source .venv/bin/activate",
         "dev": "fastapi dev main.py",
+        "start:worker:extract": "PYTHONPATH='..' rq worker --url redis://localhost:6379 extract",
         "start": "fastapi run main.py",
         "lint": "uvx ruff check"
     }
