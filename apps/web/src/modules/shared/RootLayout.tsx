@@ -83,6 +83,11 @@ const RootLayout = () => {
             label="Chat"
             leftSection={<Icon icon="mdi:chat-bubble" />}
           />
+          <AppNavLink
+            to="/agent"
+            label="Agent Chat"
+            leftSection={<Icon icon="mdi:face-agent" />}
+          />
           <NavLink
             href="#required-for-focus"
             label="Knowledge Base"

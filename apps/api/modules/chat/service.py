@@ -33,9 +33,6 @@ class ChatService:
 
         session.add(message)
 
-        # completion = self.client.completions.create(
-        #     prompt=chat_message.message, model="davinci-002"
-        # )
         completion = self.client.chat.completions.create(
             model="o3-mini",
             messages=[

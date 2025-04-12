@@ -28,7 +28,7 @@ const getURL = (
  * Refresh the access and refresh tokens, and
  * returns the new access token
  */
-export const refreshTokens = async () => {
+export const refreshTokens = async (): Promise<string> => {
   try {
     const token = localStorage.getItem("REFRESH_TOKEN");
 
@@ -60,7 +60,7 @@ export const refreshTokens = async () => {
 
     localStorage.setItem("ACCESS_TOKEN", res.access_token);
 
-    return res.access_token;
+    return res.access_token as string;
   } catch {
     throw new ApiResponseError("Login session expired", 401);
   }
@@ -78,7 +78,7 @@ export type ITokenDetails = {
 /**
  * Checks token's validity
  */
-export const getToken = async () => {
+export const getToken = async (): Promise<string | null> => {
   let accessToken: string | null | true;
 
   try {

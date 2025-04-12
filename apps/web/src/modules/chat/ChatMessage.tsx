@@ -1,15 +1,29 @@
 import React, { useMemo } from "react";
 import { cn } from "../../utils";
-import { Accordion, Code, Loader, Skeleton } from "@mantine/core";
+import {
+  Accordion,
+  Anchor,
+  Code,
+  Loader,
+  Progress,
+  Skeleton,
+  Title
+} from "@mantine/core";
 import Markdown, { ReactRenderer } from "marked-react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-interface ChatMessageProps {
-  message: string;
-  isLoading?: boolean;
-  isUser?: boolean;
-  isError?: boolean;
+export interface IDuckDuckGoToolResult {
+  snippet: string;
+  title: string;
+  link: string;
 }
+
+export type IToolResult = {
+  name: "duckduckgo_results_json";
+  label: string;
+  icon: string;
+  content: Array<IDuckDuckGoToolResult>;
+};
 
 interface SplitMessage {
   content: string | null;
@@ -17,11 +31,24 @@ interface SplitMessage {
   isThinking?: boolean;
 }
 
+interface ChatMessageProps {
+  message: string;
+  reason?: string;
+  isLoading?: boolean;
+  isUser?: boolean;
+  isError?: boolean;
+  isStreaming?: boolean;
+  tools?: Array<IToolResult>;
+}
+
 const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
+  reason,
   isError,
   isLoading,
-  isUser
+  isUser,
+  isStreaming,
+  tools
 }) => {
   // for reasoning model, we split the message into content and thought
   // TODO: implement this as remark/rehype plugin in the future
@@ -31,11 +58,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     let actualContent = "";
     let thought = "";
     let isThinking = false;
-    let thinkSplit = message.split("<think>", 2);
-    actualContent += thinkSplit[0];
+
+    const hasOpeningThinkTag = message.includes("<think>");
+    const hasClosingThinkTag = message.includes("</think>");
+
+    let thinkSplit: string[] = [];
+
+    if (hasOpeningThinkTag && hasClosingThinkTag) {
+      thinkSplit = message.split("<think>", 2);
+      actualContent += thinkSplit[0];
+    } else if (hasClosingThinkTag && !hasOpeningThinkTag) {
+      thinkSplit = ["", message];
+    } else {
+      return { content: message };
+    }
 
     while (thinkSplit[1] !== undefined) {
       // <think> tag found
+      console.log(thinkSplit);
       thinkSplit = thinkSplit[1].split("</think>", 2);
       thought += thinkSplit[0];
       isThinking = true;
@@ -46,6 +86,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         actualContent += thinkSplit[0];
       }
     }
+
     return { content: actualContent, thought, isThinking };
   }, [message, isUser]);
 
@@ -72,28 +113,83 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <div
-      className={cn("p-4 max-w-[80%]", {
+      className={cn("p-4 max-w-[80%] rounded-lg", {
         "self-end bg-gray-900": isUser,
         "self-start bg-gray-800": !isUser,
-        "bg-red-400": isError,
+        "bg-red-950": isError,
         "min-w-xl": isLoading
       })}>
       {isLoading ? <Skeleton height={40} /> : null}
 
-      {!isLoading && (
-        <Accordion defaultValue="thought" mb="md">
+      {!isLoading && !isUser && (reason || thought) ? (
+        <Accordion
+          defaultValue={null}
+          mb="md"
+          classNames={{
+            label: "!py-2"
+          }}>
           <Accordion.Item value="thought">
             <Accordion.Control icon={<Icon icon="mdi:thought-bubble" />}>
               Thought {isThinking ? <Loader /> : null}
             </Accordion.Control>
-            <Accordion.Panel>
-              <Markdown renderer={renderer}>{thought}</Markdown>
+            <Accordion.Panel className="bg-gray-900">
+              {reason ? (
+                <Markdown renderer={renderer}>{reason}</Markdown>
+              ) : null}
+              {thought ? (
+                <Markdown renderer={renderer}>{thought}</Markdown>
+              ) : null}
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>
-      )}
+      ) : null}
 
       <Markdown renderer={renderer}>{content}</Markdown>
+
+      {!isUser && !isLoading && tools !== undefined && tools.length > 0 ? (
+        <div className="mt-4">
+          {tools?.map((tool, index) => (
+            <Accordion
+              key={index}
+              defaultValue={null}
+              mb="md"
+              classNames={{
+                label: "!py-2"
+              }}>
+              <Accordion.Item value={tool.name}>
+                <Accordion.Control icon={<Icon icon={tool.icon} />}>
+                  <Title order={4}>{tool.label}</Title>
+                </Accordion.Control>
+
+                <Accordion.Panel
+                  className="bg-gray-900"
+                  classNames={{ content: "flex flex-col gap-3" }}>
+                  {tool.content?.map((content, index) => (
+                    <div key={index} className="shadow bg-gray-800 p-4">
+                      <Anchor
+                        target="_blank"
+                        href={content.link}
+                        rel="noreferrer"
+                        className="break-words">
+                        <Title order={5}>
+                          {content.title}{" "}
+                          <Icon
+                            icon="mdi:external-link"
+                            className="inline-block text-xl"
+                          />
+                        </Title>
+                      </Anchor>
+                      <p>{content.snippet}</p>
+                    </div>
+                  ))}
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+          ))}
+        </div>
+      ) : null}
+
+      {isStreaming ? <Progress value={100} animated /> : null}
     </div>
   );
 };

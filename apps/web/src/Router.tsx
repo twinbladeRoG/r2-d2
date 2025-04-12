@@ -6,6 +6,7 @@ import NotFound from "./modules/shared/NotFound";
 import Documents from "./pages/documents";
 import Extraction from "./pages/extraction";
 import ExtractionStatus from "./modules/knowledge-base/ExtractionStatus";
+import AgentChatPage from "./pages/agent-chat";
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,7 @@ const router = createBrowserRouter([
     errorElement: <div>Not Found</div>,
     children: [
       { index: true, element: <Home /> },
+      { path: "/agent", element: <AgentChatPage /> },
       { path: "documents", element: <Documents /> },
       {
         path: "extraction",

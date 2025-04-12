@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+.mermaid svg {
+    margin-left: auto;
+    margin-right: auto;
+}

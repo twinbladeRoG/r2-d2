@@ -108,6 +108,8 @@ class DocumentExtractorService:
 
             await asyncio.sleep(10)
 
+            # TODO: Remove previous extraction results
+
             response = self._get_sections(session, document, result)
 
             return response
