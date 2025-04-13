@@ -24,11 +24,10 @@ const useChatMessages = () => {
       options:
         | {
             onDone?: () => void;
+            onNodeChange?: (node: string) => void;
           }
         | undefined
     ) => {
-      console.log(message.event);
-
       switch (message.event) {
         case "done": {
           setMessages((prev) =>
@@ -48,7 +47,6 @@ const useChatMessages = () => {
 
         case "message": {
           const data = JSON.parse(message.data) as { text: string };
-          console.log(data);
 
           setMessages((prev) =>
             prev.map((message) => {
@@ -91,8 +89,6 @@ const useChatMessages = () => {
         case "tool": {
           const data = JSON.parse(message.data) as IToolResult;
 
-          console.log("TOOLS", data.content);
-
           switch (data.name) {
             case "duckduckgo_results_json": {
               setMessages((prev) =>
@@ -121,6 +117,12 @@ const useChatMessages = () => {
               break;
           }
 
+          break;
+        }
+
+        case "node": {
+          const data = message.data as string;
+          options?.onNodeChange?.(data);
           break;
         }
 

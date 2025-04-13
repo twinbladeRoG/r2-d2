@@ -72,11 +72,17 @@ def get_answer(message: str):
         events = graph.stream(
             {"messages": [{"role": "user", "content": message}]},
             config,
-            stream_mode="values",
+            stream_mode="updates",
         )
         for event in events:
-            for value in event.values():
-                message: BaseMessage = value[-1]
+            for node, event_value in event.items():
+                yield f"event: node\ndata: {node}\n\n"
+
+                if len(event_value.get("messages", [])) == 0:
+                    continue
+
+                message: BaseMessage = event_value.get("messages", [])[-1]
+
                 if isinstance(message, HumanMessage):
                     continue
 

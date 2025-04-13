@@ -75,7 +75,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
     while (thinkSplit[1] !== undefined) {
       // <think> tag found
-      console.log(thinkSplit);
       thinkSplit = thinkSplit[1].split("</think>", 2);
       thought += thinkSplit[0];
       isThinking = true;
@@ -117,7 +116,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         "self-end bg-gray-900": isUser,
         "self-start bg-gray-800": !isUser,
         "bg-red-950": isError,
-        "min-w-xl": isLoading
+        "min-w-3/4": isLoading
       })}>
       {isLoading ? <Skeleton height={40} /> : null}
 

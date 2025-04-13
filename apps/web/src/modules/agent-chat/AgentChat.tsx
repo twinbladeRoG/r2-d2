@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../../utils";
-import { Divider, ScrollArea } from "@mantine/core";
+import { Divider, ScrollArea, Tabs } from "@mantine/core";
 import { v4 as uuid } from "uuid";
 import ChatInput from "../chat/ChatInput";
 import ChatMessage from "../chat/ChatMessage";
@@ -14,6 +14,8 @@ import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 import Mermaid from "./Mermaid";
 import useChatMessages, { IMessage } from "./hooks";
+import AgentGraph from "./AgentGraph";
+import { ReactFlowProvider } from "@xyflow/react";
 
 interface ChatProps {
   className?: string;
@@ -28,6 +30,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages, updateMessage] = useChatMessages();
+  const [activeNode, setActiveNode] = useState<string | null>(null);
 
   const handleSubmit = async (message: string) => {
     const botMessageId = uuid();
@@ -76,6 +79,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
           response.ok &&
           response.headers.get("content-type") === EventStreamContentType
         ) {
+          setActiveNode("__start__");
           return;
         } else if (
           response.status >= 400 &&
@@ -114,7 +118,11 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
       },
       onmessage(ev) {
         updateMessage(ev, botMessageId, {
-          onDone: () => ctrl.abort()
+          onDone: () => {
+            ctrl.abort();
+            setActiveNode("__end__");
+          },
+          onNodeChange: (node: string) => setActiveNode(node)
         });
       }
     });
@@ -130,8 +138,8 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
   }, [messages]);
 
   return (
-    <section className={cn(className, "flex flex-row gap-4")}>
-      <div className="flex flex-col flex-1">
+    <section className={cn(className, "grid grid-cols-[1fr_380px] gap-4")}>
+      <div className="flex flex-col overflow-auto">
         <div className="flex w-full">
           <h1 className="font-bold">Agent Chat</h1>
         </div>
@@ -158,11 +166,34 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
         <ChatInput onSubmit={handleSubmit} className="mt-auto" />
       </div>
 
-      <div className="w-[320px] border border-amber-400 rounded-2xl bg-amber-50/20 py-7">
-        {workflow.data?.mermaid ? (
-          <Mermaid>{workflow.data.mermaid}</Mermaid>
-        ) : null}
-      </div>
+      <Tabs
+        defaultValue="graph"
+        keepMounted={false}
+        classNames={{
+          root: "!flex !flex-col",
+          panel: "!grow h-full flex flex-col"
+        }}>
+        <Tabs.List>
+          <Tabs.Tab value="graph">Graph</Tabs.Tab>
+          <Tabs.Tab value="mermaid">Mermaid</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="graph">
+          {workflow.data?.state ? (
+            <ReactFlowProvider>
+              <AgentGraph graph={workflow.data.state} activeNode={activeNode} />
+            </ReactFlowProvider>
+          ) : null}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="mermaid">
+          <div className="border border-amber-400 rounded-2xl bg-amber-50/20 py-7">
+            {workflow.data?.mermaid ? (
+              <Mermaid>{workflow.data.mermaid}</Mermaid>
+            ) : null}
+          </div>
+        </Tabs.Panel>
+      </Tabs>
     </section>
   );
 };

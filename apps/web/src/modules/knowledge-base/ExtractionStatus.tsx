@@ -41,9 +41,7 @@ const ExtractionStatus = () => {
         });
       },
       onMessage(event) {
-        console.log(event);
         const message = JSON.parse(event.data);
-        console.log(message);
 
         setStatus(message.status as string);
       }

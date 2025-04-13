@@ -93,7 +93,7 @@ export interface IAgentWorkflowRunnableNode {
 
 export type IAgentWorkflowNode =
   | IAgentWorkflowSchemaNode
-  | IAgentWorkflowSchemaNode;
+  | IAgentWorkflowRunnableNode;
 
 export interface IAgentWorkflow {
   mermaid: string;
