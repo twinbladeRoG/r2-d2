@@ -66,6 +66,7 @@ interface AgentNodeProps {
   data: {
     label: string;
     isActive: boolean;
+    isVisited?: boolean | null;
   };
 }
 
@@ -76,6 +77,7 @@ const AgentNode: React.FC<AgentNodeProps> = ({ data }) => {
   return (
     <div
       className={cn("border rounded p-2 bg-blue-700/40", {
+        "bg-blue-700": data.isVisited,
         "bg-purple-800": isStartNode,
         "bg-fuchsia-800": isEndNode,
         "bg-green-700": data.isActive
@@ -160,12 +162,18 @@ const AgentGraph: React.FC<AgentGraphProps> = ({ graph, activeNode }) => {
         return prev.map((node) => {
           return {
             ...node,
-            data: { ...node.data, isActive: node.id === activeNode }
+            data: {
+              ...node.data,
+              isActive: node.id === activeNode,
+              isVisited: node.id === activeNode ? true : node.data?.isVisited
+            }
           };
         });
       });
     }
   }, [activeNode, setNodes]);
+
+  useEffect(() => console.log(nodes), [nodes]);
 
   return (
     <div className="w-full flex-1">

@@ -2,6 +2,7 @@ import json
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_deepseek import ChatDeepSeek
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
 from api.core.config import settings
@@ -19,6 +20,8 @@ llm = ChatDeepSeek(
     max_retries=2,
 )
 llm_with_tools = llm.bind_tools(tools)
+
+memory = MemorySaver()
 
 
 def chatbot(state: State):
@@ -58,7 +61,7 @@ def build_graph():
     )
     graph_builder.add_edge("tools", "chatbot")
 
-    graph = graph_builder.compile()
+    graph = graph_builder.compile(checkpointer=memory)
 
     return graph
 

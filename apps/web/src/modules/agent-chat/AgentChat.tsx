@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../../utils";
 import { Divider, ScrollArea, Tabs } from "@mantine/core";
 import { v4 as uuid } from "uuid";
@@ -127,8 +127,6 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
       }
     });
   };
-
-  useEffect(() => console.log(messages), [messages]);
 
   useLayoutEffect(() => {
     scrollRef.current!.scrollTo({
