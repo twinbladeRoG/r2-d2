@@ -1,14 +1,15 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from .agent import get_answer, graph
+from .dependencies import WebSearchAgentDep
 from .schema import AgentChatCreate
 
 router = APIRouter(prefix="/agent", tags=["Agent"])
 
 
 @router.get("/workflow")
-def chat():
+def chat(agent: WebSearchAgentDep):
+    graph = agent.build_graph()
     mermaid = graph.get_graph().draw_mermaid()
     state = graph.get_graph().to_json()
 
@@ -16,9 +17,9 @@ def chat():
 
 
 @router.post("/")
-def chat(body: AgentChatCreate):
+def chat(body: AgentChatCreate, agent: WebSearchAgentDep):
     return StreamingResponse(
-        get_answer(conversation_id=body.conversation_id, message=body.message),
+        agent.get_answer(conversation_id=body.conversation_id, message=body.message),
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
