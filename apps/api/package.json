@@ -3,6 +3,8 @@
     "version": "1.0.0",
     "description": "API for R2-D2",
     "scripts": {
+        "docker:up": "docker compose up --build -d",
+        "docker:down": "docker compose down --remove-orphans",
         "predev": "source .venv/bin/activate",
         "dev": "fastapi dev main.py",
         "start:worker:extract": "PYTHONPATH='..' rq worker --url redis://localhost:6379 extract",

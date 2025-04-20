@@ -16,6 +16,7 @@ import Mermaid from "./Mermaid";
 import useChatMessages, { IMessage } from "./hooks";
 import AgentGraph from "./AgentGraph";
 import { ReactFlowProvider } from "@xyflow/react";
+import InterruptForm from "./InterruptForm";
 
 interface ChatProps {
   className?: string;
@@ -28,13 +29,23 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
   const navigate = useNavigate();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [messages, setMessages, updateMessage] = useChatMessages();
+  const {
+    messages,
+    setMessages,
+    updateMessage,
+    isInterrupted,
+    conversationId,
+    interruptToolId
+  } = useChatMessages();
   const [activeNode, setActiveNode] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
 
-  const handleSubmit = async (message: string) => {
+  const handleSubmit = async (
+    message: string,
+    hasInterrupt: boolean = false
+  ) => {
     const botMessageId = uuid();
-    setConversationId(uuid());
+    setIsStreaming(true);
 
     setMessages((prev) => [
       ...prev,
@@ -71,7 +82,13 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
       },
       body: JSON.stringify({
         message: message,
-        conversation_id: conversationId
+        conversation_id: conversationId,
+        interrupt_response: hasInterrupt
+          ? {
+              message: message,
+              tool_id: interruptToolId
+            }
+          : undefined
       }),
       signal: ctrl.signal,
       async onopen(response) {
@@ -121,6 +138,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
           onDone: () => {
             ctrl.abort();
             setActiveNode("__end__");
+            setIsStreaming(false);
           },
           onNodeChange: (node: string) => setActiveNode(node)
         });
@@ -149,19 +167,24 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
             {messages.map((message) => (
               <ChatMessage
                 key={message.id}
-                message={message.message}
-                reason={message.reason}
-                isLoading={message.isLoading}
-                isError={message.isError}
+                {...message}
                 isUser={message.role === "user"}
-                isStreaming={message.isStreaming}
-                tools={message.tools}
               />
             ))}
+
+            {isInterrupted ? (
+              <InterruptForm
+                onSubmit={(message) => handleSubmit(message, true)}
+              />
+            ) : null}
           </div>
         </ScrollArea.Autosize>
 
-        <ChatInput onSubmit={handleSubmit} className="mt-auto" />
+        <ChatInput
+          onSubmit={handleSubmit}
+          className="mt-auto"
+          disabled={isStreaming || isInterrupted}
+        />
       </div>
 
       <Tabs

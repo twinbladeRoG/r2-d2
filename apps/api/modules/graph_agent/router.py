@@ -18,7 +18,7 @@ def chat():
 @router.post("/")
 def chat(body: AgentChatCreate):
     return StreamingResponse(
-        get_answer(body.message),
+        get_answer(conversation_id=body.conversation_id, message=body.message),
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",

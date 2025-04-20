@@ -9,16 +9,23 @@ import { yupResolver } from "@hookform/resolvers/yup";
 interface ChatInputProps {
   className?: string;
   onSubmit?: (message: string) => void;
+  disabled?: boolean;
 }
 
 const schema = yup.object({
   message: yup.string().required("Required")
 });
 
-const ChatInput: React.FC<ChatInputProps> = ({ className, onSubmit }) => {
+const ChatInput: React.FC<ChatInputProps> = ({
+  className,
+  onSubmit,
+  disabled
+}) => {
   const form = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { message: "" }
+    defaultValues: {
+      message: ""
+    }
   });
 
   const handleSubmit = form.handleSubmit((data) => {
@@ -48,9 +55,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ className, onSubmit }) => {
         minRows={2}
         maxRows={6}
         onKeyDown={handleKeyDown}
+        disabled={disabled}
+        placeholder="Ask anything"
       />
 
-      <ActionIcon size="xl" type="submit">
+      <ActionIcon size="xl" type="submit" disabled={disabled}>
         <Icon icon="mdi:send" className="text-2xl" />
       </ActionIcon>
     </form>

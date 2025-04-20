@@ -1,7 +1,7 @@
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_core.messages import ToolMessage
 
-tool = DuckDuckGoSearchResults(output_format="json")
+duck_duck_go_tool = DuckDuckGoSearchResults(output_format="json")
 
 tool_map = {"duckduckgo_results_json": "DuckDuckGo Web Search"}
 
@@ -45,6 +45,6 @@ class BasicToolNode:
         return {"messages": outputs}
 
 
-tools = [tool]
+tools = [duck_duck_go_tool]
 
 tool_node = BasicToolNode(tools=tools)

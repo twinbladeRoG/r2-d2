@@ -1,4 +1,6 @@
 import json
+from typing import Optional
+from uuid import uuid4
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_deepseek import ChatDeepSeek
@@ -6,6 +8,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
 from api.core.config import settings
+from api.logger import logger
 
 from .state import State
 from .tools import get_tool_icon, get_tool_label, tool_node, tools
@@ -19,6 +22,7 @@ llm = ChatDeepSeek(
     timeout=None,
     max_retries=2,
 )
+
 llm_with_tools = llm.bind_tools(tools)
 
 memory = MemorySaver()
@@ -42,6 +46,7 @@ def route_tools(
         ai_message = messages[-1]
     else:
         raise ValueError(f"No messages found in input state to tool_edge: {state}")
+
     if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
         return "tools"
     return END
@@ -50,9 +55,11 @@ def route_tools(
 def build_graph():
     graph_builder = StateGraph(State)
 
+    # Add Nodes
     graph_builder.add_node("tools", tool_node)
     graph_builder.add_node("chatbot", chatbot)
 
+    # Create Workflow
     graph_builder.add_edge(START, "chatbot")
     graph_builder.add_conditional_edges(
         "chatbot",
@@ -61,6 +68,7 @@ def build_graph():
     )
     graph_builder.add_edge("tools", "chatbot")
 
+    # Compile
     graph = graph_builder.compile(checkpointer=memory)
 
     return graph
@@ -69,14 +77,20 @@ def build_graph():
 graph = build_graph()
 
 
-def get_answer(message: str):
+def get_answer(conversation_id: Optional[str], message: str):
     try:
-        config = {"configurable": {"thread_id": "1"}}
+        if conversation_id == None:
+            conversation_id = uuid4()
+            yield f"event: conversationId\ndata: {conversation_id}\n\n"
+
+        config = {"configurable": {"thread_id": conversation_id}}
+
         events = graph.stream(
             {"messages": [{"role": "user", "content": message}]},
             config,
             stream_mode="updates",
         )
+
         for event in events:
             for node, event_value in event.items():
                 yield f"event: node\ndata: {node}\n\n"
@@ -114,6 +128,7 @@ def get_answer(message: str):
                     yield f"event: tool\ndata: {json.dumps(response)}\n\n"
 
     except Exception as e:
+        logger.error(f"Error while executing graph: {e}")
         yield f"event: error\ndata: {e}\n\n"
     finally:
         yield "event: done\ndata: end\n\n"

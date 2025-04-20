@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import Markdown, { ReactRenderer } from "marked-react";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { IMessage } from "../agent-chat/hooks";
 
 export interface IDuckDuckGoToolResult {
   snippet: string;
@@ -31,14 +32,8 @@ interface SplitMessage {
   isThinking?: boolean;
 }
 
-interface ChatMessageProps {
-  message: string;
-  reason?: string;
-  isLoading?: boolean;
+interface ChatMessageProps extends Omit<IMessage, "role" | "id"> {
   isUser?: boolean;
-  isError?: boolean;
-  isStreaming?: boolean;
-  tools?: Array<IToolResult>;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -48,7 +43,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isLoading,
   isUser,
   isStreaming,
-  tools
+  tools,
+  hasInterrupt,
+  interruptMessage
 }) => {
   // for reasoning model, we split the message into content and thought
   // TODO: implement this as remark/rehype plugin in the future
@@ -116,7 +113,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         "self-end bg-gray-900": isUser,
         "self-start bg-gray-800": !isUser,
         "bg-red-950": isError,
-        "min-w-3/4": isLoading
+        "min-w-3/4": isLoading,
+        "bg-indigo-700": hasInterrupt
       })}>
       {isLoading ? <Skeleton height={40} /> : null}
 
@@ -144,6 +142,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       ) : null}
 
       <Markdown renderer={renderer}>{content}</Markdown>
+
+      {hasInterrupt && interruptMessage ? (
+        <Markdown renderer={renderer}>{interruptMessage}</Markdown>
+      ) : null}
 
       {!isUser && !isLoading && tools !== undefined && tools.length > 0 ? (
         <div className="mt-4">
@@ -178,6 +180,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                           />
                         </Title>
                       </Anchor>
+                      <p className="text-xs mb-2 text-gray-500">
+                        {content.link}
+                      </p>
                       <p>{content.snippet}</p>
                     </div>
                   ))}

@@ -12,10 +12,15 @@ export interface IMessage {
   isError?: boolean;
   isStreaming?: boolean;
   tools?: Array<IToolResult>;
+  hasInterrupt?: true;
+  interruptMessage?: string;
 }
 
 const useChatMessages = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [isInterrupted, setIsInterrupted] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [interruptToolId, setInterruptToolId] = useState<string | null>(null);
 
   const updateMessage = useCallback(
     (
@@ -126,6 +131,49 @@ const useChatMessages = () => {
           break;
         }
 
+        case "interrupt": {
+          try {
+            const data = JSON.parse(message.data) as {
+              query: string;
+              message: string;
+              last_human_assistance_tool_call_id: string;
+            };
+
+            setInterruptToolId(data.last_human_assistance_tool_call_id);
+
+            setMessages((prev) =>
+              prev.map((message) => {
+                if (message.id !== botMessageId) return message;
+
+                return {
+                  ...message,
+                  id: botMessageId,
+                  message: "",
+                  isLoading: false,
+                  isStreaming: true,
+                  isError: false,
+                  hasInterrupt: true,
+                  interruptMessage: data.message
+                } satisfies IMessage;
+              })
+            );
+
+            setIsInterrupted(true);
+
+            options?.onDone?.();
+          } catch (err) {
+            console.log("ERR", err);
+          }
+
+          break;
+        }
+
+        case "conversationId": {
+          const id = message.data;
+          setConversationId(id);
+          break;
+        }
+
         case "error": {
           const data = message.data as string;
           console.log("ERR", data);
@@ -151,7 +199,14 @@ const useChatMessages = () => {
     []
   );
 
-  return [messages, setMessages, updateMessage] as const;
+  return {
+    messages,
+    setMessages,
+    updateMessage,
+    isInterrupted,
+    conversationId,
+    interruptToolId
+  } as const;
 };
 
 export default useChatMessages;
