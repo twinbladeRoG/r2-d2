@@ -11,3 +11,6 @@ select = [
     "T203"
 ]
 preview = true
+
+[lint.per-file-ignores]
+"*.ipynb" = ["T201"]
