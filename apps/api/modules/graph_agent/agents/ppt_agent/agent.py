@@ -13,7 +13,7 @@ from .nodes.tools import get_tool_icon, get_tool_label, tool_node
 from .state import State
 
 
-class WebSearchAgent(BaseAgent):
+class PowerPointAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.memory = MemorySaver()
@@ -32,6 +32,7 @@ class WebSearchAgent(BaseAgent):
 
         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
             return "tools"
+
         return END
 
     def build_graph(self):
@@ -121,7 +122,7 @@ class WebSearchAgent(BaseAgent):
                         yield f"event: tool\ndata: {json.dumps(response)}\n\n"
 
         except Exception as e:
-            logger.error(f"WebSearchAgent: Error while executing graph: {e}")
+            logger.error(f"{self.name}: Error while executing graph: {e}")
             yield f"event: error\ndata: {e}\n\n"
         finally:
             yield "event: done\ndata: end\n\n"

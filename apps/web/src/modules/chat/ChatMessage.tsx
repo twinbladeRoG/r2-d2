@@ -3,15 +3,15 @@ import { cn } from "../../utils";
 import {
   Accordion,
   Anchor,
-  Code,
   Loader,
   Progress,
   Skeleton,
   Title
 } from "@mantine/core";
-import Markdown, { ReactRenderer } from "marked-react";
+import Markdown from "marked-react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { IMessage } from "../agent-chat/hooks";
+import renderer from "../markdown";
 
 export interface IDuckDuckGoToolResult {
   snippet: string;
@@ -85,27 +85,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
     return { content: actualContent, thought, isThinking };
   }, [message, isUser]);
-
-  const renderer = useMemo(
-    () =>
-      ({
-        list(children: React.ReactNode, ordered: boolean) {
-          if (ordered)
-            return (
-              <ol className="list-inside my-2 list-decimal">{children}</ol>
-            );
-          return <ul className="list-inside my-2 list-disc">{children}</ul>;
-        },
-        code(code: React.ReactNode) {
-          return (
-            <Code block my="md">
-              {code}
-            </Code>
-          );
-        }
-      }) satisfies Partial<ReactRenderer>,
-    []
-  );
 
   return (
     <div

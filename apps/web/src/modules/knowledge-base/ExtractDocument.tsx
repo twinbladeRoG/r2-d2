@@ -1,18 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useUserFiles } from "../../apis/queries/file-storage.queries";
 import { cn } from "../../utils";
-import {
-  Anchor,
-  Button,
-  Card,
-  Code,
-  Collapse,
-  Divider,
-  Select,
-  Table,
-  Text,
-  Title
-} from "@mantine/core";
+import { Button, Card, Collapse, Divider, Select, Text } from "@mantine/core";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -20,12 +9,13 @@ import {
   useExtractDocument,
   useScheduleExtractDocument
 } from "../../apis/queries/extract.queries";
-import Markdown, { ReactRenderer } from "marked-react";
+import Markdown from "marked-react";
 import { IExtractedSection, IUsageLog } from "../../types";
 import ResourceCharts from "./ResourceCharts";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
+import renderer from "../markdown";
 
 interface ExtractDocumentProps {
   className?: string;
@@ -59,56 +49,6 @@ const ExtractDocument: React.FC<ExtractDocumentProps> = ({ className }) => {
       }
     });
   });
-
-  const renderer = useMemo(
-    () =>
-      ({
-        list(children: React.ReactNode, ordered: boolean) {
-          if (ordered)
-            return (
-              <ol className="list-inside my-2 list-decimal">{children}</ol>
-            );
-          return <ul className="list-inside my-2 list-disc">{children}</ul>;
-        },
-        code(code: React.ReactNode) {
-          return (
-            <Code block my="md">
-              {code}
-            </Code>
-          );
-        },
-        table(children) {
-          return (
-            <Table withTableBorder withColumnBorders>
-              {children}
-            </Table>
-          );
-        },
-        tableBody(children) {
-          return <Table.Tbody>{children}</Table.Tbody>;
-        },
-        tableHeader(children) {
-          return <Table.Thead>{children}</Table.Thead>;
-        },
-        tableRow(children) {
-          return <Table.Tr>{children}</Table.Tr>;
-        },
-        tableCell(children) {
-          return <Table.Td>{children}</Table.Td>;
-        },
-        heading(children, level) {
-          return <Title order={level}>{children}</Title>;
-        },
-        link(href, text) {
-          return (
-            <Anchor href={href} target="_blank">
-              {text}
-            </Anchor>
-          );
-        }
-      }) satisfies Partial<ReactRenderer>,
-    []
-  );
 
   const [showResource, handleResource] = useDisclosure();
 

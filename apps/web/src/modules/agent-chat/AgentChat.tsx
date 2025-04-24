@@ -25,7 +25,7 @@ interface ChatProps {
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AgentChat: React.FC<ChatProps> = ({ className }) => {
-  const workflow = useAgentWorkflow();
+  const workflow = useAgentWorkflow("web_search_agent");
   const navigate = useNavigate();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -75,7 +75,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
 
     const ctrl = new AbortController();
 
-    await fetchEventSource(`${API_URL}/api/v1/agent/`, {
+    await fetchEventSource(`${API_URL}/api/v1/agent/web_search_agent/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

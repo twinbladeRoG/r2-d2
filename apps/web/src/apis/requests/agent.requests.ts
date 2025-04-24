@@ -1,5 +1,5 @@
 import { IAgentWorkflow } from "../../types";
 import http from "../http";
 
-export const getAgentGraph = () =>
-  http.get<IAgentWorkflow>("/api/v1/agent/workflow");
+export const getAgentGraph = (agentName: string) =>
+  http.get<IAgentWorkflow>(`/api/v1/agent/${agentName}/workflow`);
