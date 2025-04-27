@@ -76,19 +76,23 @@ const AgentNode: React.FC<AgentNodeProps> = ({ data }) => {
 
   return (
     <div
-      className={cn("border rounded p-2 bg-blue-700/40", {
+      className={cn("border relative rounded p-2 bg-blue-700/20 w-full", {
         "bg-blue-700": data.isVisited,
         "bg-purple-800": isStartNode,
         "bg-fuchsia-800": isEndNode,
-        "bg-green-700": data.isActive
+        "bg-green-600": data.isActive && (isStartNode || isEndNode),
+        "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-pulse":
+          data.isActive && !isEndNode && !isStartNode
       })}>
       {!isStartNode && <Handle type="target" position={Position.Top} />}
-      <p
-        className={cn("text-xs", {
-          "font-bold": data.isActive
-        })}>
-        {data.label}
-      </p>
+      <div className="flex items-center gap-3">
+        <p
+          className={cn("text-xs", {
+            "font-bold": data.isActive || data.isVisited
+          })}>
+          {data.label}
+        </p>
+      </div>
       {!isEndNode && <Handle type="source" position={Position.Bottom} id="a" />}
     </div>
   );
@@ -101,10 +105,10 @@ const nodeTypes = {
 
 interface AgentGraphProps {
   graph: IAgentWorkflow["state"];
-  activeNode?: string | null;
+  visitedNodes?: string[];
 }
 
-const AgentGraph: React.FC<AgentGraphProps> = ({ graph, activeNode }) => {
+const AgentGraph: React.FC<AgentGraphProps> = ({ graph, visitedNodes }) => {
   const { fitView } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -157,21 +161,23 @@ const AgentGraph: React.FC<AgentGraphProps> = ({ graph, activeNode }) => {
   }, [graph, fitView, setEdges, setNodes, getLayoutedElements]);
 
   useEffect(() => {
-    if (activeNode) {
+    if (visitedNodes) {
       setNodes((prev) => {
         return prev.map((node) => {
           return {
             ...node,
             data: {
               ...node.data,
-              isActive: node.id === activeNode,
-              isVisited: node.id === activeNode ? true : node.data?.isVisited
+              isActive: visitedNodes[visitedNodes.length - 1] === node.id,
+              isVisited: visitedNodes.includes(node.id)
+                ? true
+                : node.data?.isVisited
             }
           };
         });
       });
     }
-  }, [activeNode, setNodes]);
+  }, [visitedNodes, setNodes]);
 
   // useEffect(() => console.log(nodes), [nodes]);
 

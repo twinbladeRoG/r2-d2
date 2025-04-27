@@ -16,6 +16,7 @@ export default [
   jsxA11y.flatConfigs.recommended,
   {
     rules: {
+      "no-console": "error",
       "react/react-in-jsx-scope": "off"
     }
   },

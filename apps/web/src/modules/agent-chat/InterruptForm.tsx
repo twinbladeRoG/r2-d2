@@ -21,7 +21,6 @@ const InterruptForm: React.FC<InterruptFormProps> = ({ onSubmit }) => {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    console.log(data);
     await onSubmit(data.message);
   });
 

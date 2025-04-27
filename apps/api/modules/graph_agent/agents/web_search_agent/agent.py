@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from uuid import uuid4
 
 from api.logger import logger
@@ -66,7 +65,7 @@ class WebSearchAgent(BaseAgent):
 
         return graph
 
-    def get_answer(self, conversation_id: Optional[str], message: str):
+    def get_answer(self, conversation_id, message, interrupt_response=None):
         try:
             graph = self.build_graph()
 
@@ -87,6 +86,10 @@ class WebSearchAgent(BaseAgent):
             for event in events:
                 for node, event_value in event.items():
                     yield f"event: node\ndata: {node}\n\n"
+
+                    state = graph.get_state(config)
+                    if len(state.next) != 0:
+                        yield f"event: node\ndata: {state.next[0]}\n\n"
 
                     if len(event_value.get("messages", [])) == 0:
                         continue

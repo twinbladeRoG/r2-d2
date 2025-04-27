@@ -28,7 +28,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
   const navigate = useNavigate();
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    console.log(data);
     login.mutate(data, {
       onSuccess: (res) => {
         localStorage.setItem("ACCESS_TOKEN", res.access_token);

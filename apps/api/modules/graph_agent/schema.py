@@ -5,7 +5,6 @@ from sqlmodel import Field, SQLModel
 
 class InterruptResponse(SQLModel):
     message: str
-    tool_id: str
 
 
 class AgentChatCreate(SQLModel):

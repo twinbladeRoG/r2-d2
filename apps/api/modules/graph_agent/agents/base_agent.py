@@ -5,6 +5,8 @@ from uuid import uuid4
 from api.logger import logger
 from langgraph.graph.state import CompiledStateGraph
 
+from ..schema import InterruptResponse
+
 
 class BaseAgent(ABC):
     """
@@ -27,7 +29,10 @@ class BaseAgent(ABC):
 
     @abstractmethod
     def get_answer(
-        self, conversation_id: Optional[str], message: str
+        self,
+        conversation_id: Optional[str],
+        message: str,
+        interrupt_response: Optional[InterruptResponse] = None,
     ) -> Generator[str, Any, None]:
         """
         Stream the answer from the agent.

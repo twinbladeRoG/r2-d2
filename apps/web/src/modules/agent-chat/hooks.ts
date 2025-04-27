@@ -20,7 +20,15 @@ const useChatMessages = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isInterrupted, setIsInterrupted] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [interruptToolId, setInterruptToolId] = useState<string | null>(null);
+  const [visitedNodes, setVisitedNodes] = useState<string[]>([]);
+
+  const appendVisitedNode = (node: string) => {
+    setVisitedNodes((previousNodes) => {
+      const lastVisitedNode = previousNodes[previousNodes.length - 1];
+      if (lastVisitedNode === node) return previousNodes;
+      return [...previousNodes, node];
+    });
+  };
 
   const updateMessage = useCallback(
     (
@@ -52,8 +60,6 @@ const useChatMessages = () => {
 
         case "message": {
           const data = JSON.parse(message.data) as { text: string };
-
-          setIsInterrupted(false);
 
           setMessages((prev) =>
             prev.map((message) => {
@@ -129,7 +135,6 @@ const useChatMessages = () => {
 
         case "node": {
           const data = message.data as string;
-          console.log("NODE CHANGED", data);
           options?.onNodeChange?.(data);
           break;
         }
@@ -139,10 +144,7 @@ const useChatMessages = () => {
             const data = JSON.parse(message.data) as {
               query: string;
               message: string;
-              last_human_assistance_tool_call_id: string;
             };
-
-            setInterruptToolId(data.last_human_assistance_tool_call_id);
 
             setMessages((prev) =>
               prev.map((message) => {
@@ -165,7 +167,20 @@ const useChatMessages = () => {
 
             options?.onDone?.();
           } catch (err) {
-            console.log("ERR", err);
+            setMessages((prev) =>
+              prev.map((message) => {
+                if (message.id !== botMessageId) return message;
+
+                return {
+                  ...message,
+                  id: botMessageId,
+                  message: (err as Error).message,
+                  isLoading: false,
+                  isStreaming: true,
+                  isError: false
+                } satisfies IMessage;
+              })
+            );
           }
 
           break;
@@ -179,7 +194,6 @@ const useChatMessages = () => {
 
         case "error": {
           const data = message.data as string;
-          console.log("ERR", data);
 
           setMessages((prev) =>
             prev.map((message) => {
@@ -207,8 +221,11 @@ const useChatMessages = () => {
     setMessages,
     updateMessage,
     isInterrupted,
+    setIsInterrupted,
     conversationId,
-    interruptToolId
+    visitedNodes,
+    appendVisitedNode,
+    setVisitedNodes
   } as const;
 };
 

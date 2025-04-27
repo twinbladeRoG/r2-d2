@@ -31,8 +31,8 @@ const ExtractionStatus = () => {
     {
       share: false,
       shouldReconnect: () => false,
-      onError(event) {
-        console.log("err", event);
+      onError() {
+        //
       },
       onClose: (event) => {
         notifications.show({

@@ -67,7 +67,6 @@ class HumanAgent(BaseAgent):
             self.log(f"ID: {self.id} \tConversation: {conversation_id}")
 
             if interrupt_response is not None:
-                state = graph.get_state(config)
                 events = graph.stream(
                     Command(update={"name": interrupt_response.message}),
                     config,
@@ -83,6 +82,10 @@ class HumanAgent(BaseAgent):
             for event in events:
                 for node, event_value in event.items():
                     yield f"event: node\ndata: {node}\n\n"
+
+                    state = graph.get_state(config)
+                    if len(state.next) != 0:
+                        yield f"event: node\ndata: {state.next[0]}\n\n"
 
                     if node == "__interrupt__":
                         interrupt = event_value[0]

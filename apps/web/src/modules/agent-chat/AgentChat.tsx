@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../../utils";
 import { Button, Divider, ScrollArea, Select, Tabs } from "@mantine/core";
 import { v4 as uuid } from "uuid";
@@ -28,7 +28,7 @@ interface ChatProps {
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AgentChat: React.FC<ChatProps> = ({ className }) => {
-  const [agentName, setAgentName] = useState<string>("human_agent");
+  const [agentName, setAgentName] = useState<string>("web_search_agent");
   const workflow = useAgentWorkflow(agentName);
   const navigate = useNavigate();
 
@@ -38,18 +38,15 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
     setMessages,
     updateMessage,
     isInterrupted,
+    setIsInterrupted,
     conversationId,
-    interruptToolId
+    visitedNodes,
+    appendVisitedNode,
+    setVisitedNodes
   } = useChatMessages();
-  const [activeNode, setActiveNode] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
 
   const agentConversation = useAgentChatConversation(agentName, conversationId);
-
-  useEffect(
-    () => console.log("Conversation", agentConversation.data),
-    [agentConversation.data]
-  );
 
   const handleSubmit = async (
     message: string,
@@ -57,6 +54,8 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
   ) => {
     const botMessageId = uuid();
     setIsStreaming(true);
+    setIsInterrupted(false);
+    setVisitedNodes([]);
 
     setMessages((prev) => [
       ...prev,
@@ -94,12 +93,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
       body: JSON.stringify({
         message: message,
         conversation_id: conversationId,
-        interrupt_response: hasInterrupt
-          ? {
-              message: message,
-              tool_id: interruptToolId
-            }
-          : undefined
+        interrupt_response: hasInterrupt ? { message: message } : undefined
       }),
       signal: ctrl.signal,
       async onopen(response) {
@@ -107,7 +101,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
           response.ok &&
           response.headers.get("content-type") === EventStreamContentType
         ) {
-          setActiveNode(() => "__start__");
+          appendVisitedNode("__start__");
           return;
         } else if (
           response.status >= 400 &&
@@ -142,18 +136,17 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
         ctrl.abort();
       },
       onclose() {
-        console.log("CLOSE");
+        //
       },
       onmessage(ev) {
         updateMessage(ev, botMessageId, {
           onDone: () => {
             ctrl.abort();
-            setActiveNode(() => "__end__");
+            appendVisitedNode("__end__");
             setIsStreaming(false);
           },
           onNodeChange: (node: string) => {
-            console.log("CHANGE NODE", node);
-            setActiveNode(() => node);
+            appendVisitedNode(node);
           }
         });
       }
@@ -237,7 +230,10 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
         <Tabs.Panel value="graph">
           {workflow.data?.state ? (
             <ReactFlowProvider>
-              <AgentGraph graph={workflow.data.state} activeNode={activeNode} />
+              <AgentGraph
+                graph={workflow.data.state}
+                visitedNodes={visitedNodes}
+              />
             </ReactFlowProvider>
           ) : null}
         </Tabs.Panel>
