@@ -31,7 +31,11 @@ def chat(agent_name: str, body: AgentChatCreate, agent: AgentDep):
         raise HTTPException(status_code=404, detail=f"Agent {agent_name} not found")
 
     return StreamingResponse(
-        agent.get_answer(conversation_id=body.conversation_id, message=body.message),
+        agent.get_answer(
+            conversation_id=body.conversation_id,
+            message=body.message,
+            interrupt_response=body.interrupt_response,
+        ),
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
@@ -39,3 +43,14 @@ def chat(agent_name: str, body: AgentChatCreate, agent: AgentDep):
             "Content-Type": "text/event-stream",
         },
     )
+
+
+@router.get("/{agent_name}/chat/{conversation_id}")
+def chat_history(agent_name: str, conversation_id: str, agent: AgentDep):
+    if agent is None:
+        logger.info(f"Agent {agent_name} not found")
+        raise HTTPException(status_code=404, detail=f"Agent {agent_name} not found")
+
+    history = agent.get_history(conversation_id)
+
+    return history

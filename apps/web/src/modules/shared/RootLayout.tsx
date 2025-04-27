@@ -53,7 +53,7 @@ const RootLayout = () => {
       header={{ height: 60 }}
       navbar={{
         width: 300,
-        breakpoint: "sm",
+        breakpoint: "md",
         collapsed: { mobile: !mobileOpened, desktop: !desktopOpened }
       }}
       padding={"md"}>
@@ -62,14 +62,14 @@ const RootLayout = () => {
           <Burger
             opened={mobileOpened}
             onClick={toggleMobile}
-            hiddenFrom="sm"
-            size="sm"
+            hiddenFrom="md"
+            size="md"
           />
           <Burger
             opened={desktopOpened}
             onClick={toggleDesktop}
-            visibleFrom="sm"
-            size="sm"
+            visibleFrom="md"
+            size="md"
           />
 
           <Title>R2 D2</Title>

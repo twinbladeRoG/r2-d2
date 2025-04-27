@@ -35,6 +35,13 @@ class BaseAgent(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_history(self, conversation_id: str) -> list:
+        """
+        Get the history of the conversation.
+        """
+        pass
+
     @classmethod
     def log(cls, message: str) -> None:
         """

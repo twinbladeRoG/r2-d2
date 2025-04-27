@@ -1,10 +1,13 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../../utils";
-import { Divider, ScrollArea, Tabs } from "@mantine/core";
+import { Button, Divider, ScrollArea, Select, Tabs } from "@mantine/core";
 import { v4 as uuid } from "uuid";
 import ChatInput from "../chat/ChatInput";
 import ChatMessage from "../chat/ChatMessage";
-import { useAgentWorkflow } from "../../apis/queries/agent.queries";
+import {
+  useAgentChatConversation,
+  useAgentWorkflow
+} from "../../apis/queries/agent.queries";
 import {
   EventStreamContentType,
   fetchEventSource
@@ -25,7 +28,8 @@ interface ChatProps {
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AgentChat: React.FC<ChatProps> = ({ className }) => {
-  const workflow = useAgentWorkflow("web_search_agent");
+  const [agentName, setAgentName] = useState<string>("human_agent");
+  const workflow = useAgentWorkflow(agentName);
   const navigate = useNavigate();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +43,13 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
   } = useChatMessages();
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+
+  const agentConversation = useAgentChatConversation(agentName, conversationId);
+
+  useEffect(
+    () => console.log("Conversation", agentConversation.data),
+    [agentConversation.data]
+  );
 
   const handleSubmit = async (
     message: string,
@@ -75,7 +86,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
 
     const ctrl = new AbortController();
 
-    await fetchEventSource(`${API_URL}/api/v1/agent/web_search_agent/chat`, {
+    await fetchEventSource(`${API_URL}/api/v1/agent/${agentName}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -96,7 +107,7 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
           response.ok &&
           response.headers.get("content-type") === EventStreamContentType
         ) {
-          setActiveNode("__start__");
+          setActiveNode(() => "__start__");
           return;
         } else if (
           response.status >= 400 &&
@@ -137,10 +148,13 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
         updateMessage(ev, botMessageId, {
           onDone: () => {
             ctrl.abort();
-            setActiveNode("__end__");
+            setActiveNode(() => "__end__");
             setIsStreaming(false);
           },
-          onNodeChange: (node: string) => setActiveNode(node)
+          onNodeChange: (node: string) => {
+            console.log("CHANGE NODE", node);
+            setActiveNode(() => node);
+          }
         });
       }
     });
@@ -156,8 +170,29 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
   return (
     <section className={cn(className, "grid grid-cols-[1fr_380px] gap-4")}>
       <div className="flex flex-col overflow-auto">
-        <div className="flex w-full">
+        <div className="flex items-center gap-4 w-full">
           <h1 className="font-bold">Agent Chat</h1>
+
+          <Select
+            size="xs"
+            data={[
+              { label: "Web Search Agent", value: "web_search_agent" },
+              { label: "Human Agent", value: "human_agent" },
+              { label: "PowerPoint Agent", value: "power_point_agent" }
+            ]}
+            value={agentName}
+            onChange={(value) => {
+              setAgentName(value!);
+              setMessages([]);
+            }}
+          />
+
+          <Button
+            size="sm"
+            disabled={!conversationId}
+            onClick={() => agentConversation.refetch()}>
+            History
+          </Button>
         </div>
 
         <Divider className="my-3" />

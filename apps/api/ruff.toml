@@ -8,7 +8,8 @@ select = [
     "FAST002",
     "FAST003",
     "T201",
-    "T203"
+    "T203",
+    "F401",
 ]
 preview = true
 

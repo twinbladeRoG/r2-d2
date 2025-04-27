@@ -4,7 +4,7 @@ from datetime import datetime
 import gpustat
 import psutil
 
-from .schemas import CPUUsage, GPUUsage, UsageLog
+from .schemas import GPUUsage, UsageLog
 
 
 def monitor_usage(

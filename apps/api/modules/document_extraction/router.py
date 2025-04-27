@@ -1,10 +1,9 @@
 import asyncio
 import json
 from datetime import datetime
-from pathlib import Path
 from pprint import pprint
 
-from fastapi import APIRouter, WebSocket, WebSocketException
+from fastapi import APIRouter, WebSocket
 from pydantic import ValidationError
 
 from api.dependencies import (

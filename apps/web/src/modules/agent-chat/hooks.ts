@@ -53,6 +53,8 @@ const useChatMessages = () => {
         case "message": {
           const data = JSON.parse(message.data) as { text: string };
 
+          setIsInterrupted(false);
+
           setMessages((prev) =>
             prev.map((message) => {
               if (message.id !== botMessageId) return message;
@@ -127,6 +129,7 @@ const useChatMessages = () => {
 
         case "node": {
           const data = message.data as string;
+          console.log("NODE CHANGED", data);
           options?.onNodeChange?.(data);
           break;
         }

@@ -173,7 +173,7 @@ const AgentGraph: React.FC<AgentGraphProps> = ({ graph, activeNode }) => {
     }
   }, [activeNode, setNodes]);
 
-  useEffect(() => console.log(nodes), [nodes]);
+  // useEffect(() => console.log(nodes), [nodes]);
 
   return (
     <div className="w-full flex-1">

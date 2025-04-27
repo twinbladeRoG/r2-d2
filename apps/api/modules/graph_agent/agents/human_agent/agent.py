@@ -2,37 +2,24 @@ import json
 from typing import Optional
 from uuid import uuid4
 
+from api.error import UserDefinedException
 from api.logger import logger
 from api.modules.graph_agent.agents.base_agent import BaseAgent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, Interrupt
 
+from ...schema import InterruptResponse
+from .nodes.ask_name import ask_name
 from .nodes.chatbot import ChatBotNode
-from .nodes.tools import get_tool_icon, get_tool_label, tool_node
 from .state import State
 
 
-class WebSearchAgent(BaseAgent):
+class HumanAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.memory = MemorySaver()
-
-    def route_tools(self, state: State):
-        """
-        Use in the conditional_edge to route to the ToolNode if the last message
-        has tool calls. Otherwise, route to the end.
-        """
-        if isinstance(state, list):
-            ai_message = state[-1]
-        elif messages := state.get("messages", []):
-            ai_message = messages[-1]
-        else:
-            raise ValueError(f"No messages found in input state to tool_edge: {state}")
-
-        if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
-            return "tools"
-        return END
 
     def build_graph(self):
         if self.graph != None:
@@ -47,17 +34,13 @@ class WebSearchAgent(BaseAgent):
         chatbot = ChatBotNode()
 
         # Add Nodes
-        graph_builder.add_node("tools", tool_node)
         graph_builder.add_node("chatbot", chatbot)
+        graph_builder.add_node("ask_name", ask_name)
 
         # Create Workflow
-        graph_builder.add_edge(START, "chatbot")
-        graph_builder.add_conditional_edges(
-            "chatbot",
-            self.route_tools,
-            {"tools": "tools", END: END},
-        )
-        graph_builder.add_edge("tools", "chatbot")
+        graph_builder.add_edge(START, "ask_name")
+        graph_builder.add_edge("ask_name", "chatbot")
+        graph_builder.add_edge("chatbot", END)
 
         # Compile
         graph = graph_builder.compile(checkpointer=self.memory)
@@ -66,7 +49,12 @@ class WebSearchAgent(BaseAgent):
 
         return graph
 
-    def get_answer(self, conversation_id: Optional[str], message: str):
+    def get_answer(
+        self,
+        conversation_id: Optional[str],
+        message: str,
+        interrupt_response: Optional[InterruptResponse] = None,
+    ):
         try:
             graph = self.build_graph()
 
@@ -78,15 +66,34 @@ class WebSearchAgent(BaseAgent):
 
             self.log(f"ID: {self.id} \tConversation: {conversation_id}")
 
-            events = graph.stream(
-                {"messages": [{"role": "user", "content": message}]},
-                config,
-                stream_mode="updates",
-            )
+            if interrupt_response is not None:
+                state = graph.get_state(config)
+                events = graph.stream(
+                    Command(update={"name": interrupt_response.message}),
+                    config,
+                    stream_mode="updates",
+                )
+            else:
+                events = graph.stream(
+                    {"messages": [{"role": "user", "content": message}]},
+                    config,
+                    stream_mode="updates",
+                )
 
             for event in events:
                 for node, event_value in event.items():
                     yield f"event: node\ndata: {node}\n\n"
+
+                    if node == "__interrupt__":
+                        interrupt = event_value[0]
+                        if isinstance(interrupt, Interrupt):
+                            response = {
+                                "query": interrupt.value,
+                                "message": interrupt.value,
+                                "last_human_assistance_tool_call_id": interrupt.ns[0],
+                            }
+                            yield f"event: interrupt\ndata: {json.dumps(response)}\n\n"
+                            continue
 
                     if len(event_value.get("messages", [])) == 0:
                         continue
@@ -112,19 +119,36 @@ class WebSearchAgent(BaseAgent):
                         tool_content = message.content
                         tool_content = json.loads(tool_content)
 
-                        response = {
-                            "content": tool_content,
-                            "name": message.name,
-                            "label": get_tool_label(message.name),
-                            "icon": get_tool_icon(message.name),
-                        }
+                        response = {"content": tool_content, "name": message.name}
+
                         yield f"event: tool\ndata: {json.dumps(response)}\n\n"
 
         except Exception as e:
-            logger.error(f"WebSearchAgent: Error while executing graph: {e}")
+            logger.error(f"{self.name}: Error while executing graph: {e}")
             yield f"event: error\ndata: {e}\n\n"
         finally:
             yield "event: done\ndata: end\n\n"
 
-    def get_history(self, conversation_id):
-        return []
+    def get_history(self, conversation_id: str):
+        try:
+            graph = self.build_graph()
+
+            config = {"configurable": {"thread_id": conversation_id}}
+            self.log(f"Conversation ID: {self.id} \tConversation: {conversation_id}")
+
+            state = graph.get_state(config)
+            messages = state.values.get("messages", None)
+
+            if messages is None:
+                raise UserDefinedException(
+                    "Conversation not found in memory", "CONVERSATION_NOT_FOUND"
+                )
+
+            return messages
+        except UserDefinedException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"{self.name}: Error while executing graph: {e}")
+            raise UserDefinedException(
+                f"Error while executing graph: {str(e)}", "GRAPH_EXECUTION_ERROR"
+            )

@@ -126,3 +126,6 @@ class PowerPointAgent(BaseAgent):
             yield f"event: error\ndata: {e}\n\n"
         finally:
             yield "event: done\ndata: end\n\n"
+
+    def get_history(self, conversation_id):
+        return []
