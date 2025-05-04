@@ -15,7 +15,13 @@ const router = createBrowserRouter([
     errorElement: <div>Not Found</div>,
     children: [
       { index: true, element: <Home /> },
-      { path: "/agent", element: <AgentChatPage /> },
+      {
+        path: "agent",
+        children: [
+          { index: true, element: <AgentChatPage /> },
+          { path: ":id", element: <AgentChatPage /> }
+        ]
+      },
       { path: "documents", element: <Documents /> },
       {
         path: "extraction",

@@ -78,21 +78,43 @@ const AgentNode: React.FC<AgentNodeProps> = ({ data }) => {
     <div
       className={cn("border relative rounded p-2 bg-blue-700/20 w-full", {
         "bg-blue-700": data.isVisited,
-        "bg-purple-800": isStartNode,
-        "bg-fuchsia-800": isEndNode,
+        "bg-teal-600": isStartNode,
+        "bg-emerald-600": isEndNode,
         "bg-green-600": data.isActive && (isStartNode || isEndNode),
         "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-pulse":
-          data.isActive && !isEndNode && !isStartNode
+          data.isActive && !isEndNode && !isStartNode,
+        "size-10 border-0 rounded-full flex items-center justify-center":
+          isStartNode || isEndNode
       })}>
       {!isStartNode && <Handle type="target" position={Position.Top} />}
-      <div className="flex items-center gap-3">
+
+      {!isStartNode && !isEndNode ? (
         <p
           className={cn("text-xs", {
             "font-bold": data.isActive || data.isVisited
           })}>
           {data.label}
         </p>
-      </div>
+      ) : null}
+
+      {isStartNode ? (
+        <p
+          className={cn("text-xs", {
+            "font-bold": data.isActive || data.isVisited
+          })}>
+          start
+        </p>
+      ) : null}
+
+      {isEndNode ? (
+        <p
+          className={cn("text-xs", {
+            "font-bold": data.isActive || data.isVisited
+          })}>
+          end
+        </p>
+      ) : null}
+
       {!isEndNode && <Handle type="source" position={Position.Bottom} id="a" />}
     </div>
   );

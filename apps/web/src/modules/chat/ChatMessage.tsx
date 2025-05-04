@@ -1,13 +1,6 @@
 import React, { useMemo } from "react";
 import { cn } from "../../utils";
-import {
-  Accordion,
-  Anchor,
-  Loader,
-  Progress,
-  Skeleton,
-  Title
-} from "@mantine/core";
+import { Accordion, Anchor, Loader, Skeleton, Title } from "@mantine/core";
 import Markdown from "marked-react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { IMessage } from "../agent-chat/hooks";
@@ -90,7 +83,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     <div
       className={cn("p-4 max-w-[80%] rounded-lg", {
         "self-end bg-gray-900": isUser,
-        "self-start bg-gray-800": !isUser,
+        "self-start": !isUser,
         "bg-red-950": isError,
         "min-w-3/4": isLoading,
         "bg-indigo-700": hasInterrupt
@@ -108,7 +101,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <Accordion.Control icon={<Icon icon="mdi:thought-bubble" />}>
               Thought {isThinking ? <Loader /> : null}
             </Accordion.Control>
-            <Accordion.Panel className="bg-gray-900">
+            <Accordion.Panel className="">
               {reason ? (
                 <Markdown renderer={renderer}>{reason}</Markdown>
               ) : null}
@@ -121,6 +114,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       ) : null}
 
       <Markdown renderer={renderer}>{content}</Markdown>
+
+      {isStreaming && !isUser ? (
+        <div className="mt-2">
+          <Skeleton height={16} radius="sm" />
+          <Skeleton height={16} mt={12} radius="sm" />
+          <Skeleton height={16} mt={12} width="70%" radius="sm" />
+        </div>
+      ) : null}
 
       {hasInterrupt && interruptMessage ? (
         <Markdown renderer={renderer}>{interruptMessage}</Markdown>
@@ -142,10 +143,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Accordion.Control>
 
                 <Accordion.Panel
-                  className="bg-gray-900"
                   classNames={{ content: "flex flex-col gap-3" }}>
                   {tool.content?.map((content, index) => (
-                    <div key={index} className="shadow bg-gray-800 p-4">
+                    <div
+                      key={index}
+                      className="shadow bg-gray-900/40 rounded-xl p-4">
                       <Anchor
                         target="_blank"
                         href={content.link}
@@ -171,8 +173,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           ))}
         </div>
       ) : null}
-
-      {isStreaming ? <Progress value={100} animated /> : null}
     </div>
   );
 };

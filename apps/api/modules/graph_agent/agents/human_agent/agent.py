@@ -2,7 +2,6 @@ import json
 from typing import Optional
 from uuid import uuid4
 
-from api.error import UserDefinedException
 from api.logger import logger
 from api.modules.graph_agent.agents.base_agent import BaseAgent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
@@ -131,27 +130,3 @@ class HumanAgent(BaseAgent):
             yield f"event: error\ndata: {e}\n\n"
         finally:
             yield "event: done\ndata: end\n\n"
-
-    def get_history(self, conversation_id: str):
-        try:
-            graph = self.build_graph()
-
-            config = {"configurable": {"thread_id": conversation_id}}
-            self.log(f"Conversation ID: {self.id} \tConversation: {conversation_id}")
-
-            state = graph.get_state(config)
-            messages = state.values.get("messages", None)
-
-            if messages is None:
-                raise UserDefinedException(
-                    "Conversation not found in memory", "CONVERSATION_NOT_FOUND"
-                )
-
-            return messages
-        except UserDefinedException as e:
-            raise e
-        except Exception as e:
-            logger.error(f"{self.name}: Error while executing graph: {e}")
-            raise UserDefinedException(
-                f"Error while executing graph: {str(e)}", "GRAPH_EXECUTION_ERROR"
-            )

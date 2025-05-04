@@ -44,7 +44,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     <form
       className={cn(
         className,
-        "bg-gray-800 p-4 shadow rounded-xl flex gap-x-3 items-start"
+        "bg-slate-950 p-4 shadow rounded-xl flex gap-x-3 items-start"
       )}
       onSubmit={handleSubmit}>
       <Textarea

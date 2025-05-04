@@ -223,6 +223,7 @@ const useChatMessages = () => {
     isInterrupted,
     setIsInterrupted,
     conversationId,
+    setConversationId,
     visitedNodes,
     appendVisitedNode,
     setVisitedNodes

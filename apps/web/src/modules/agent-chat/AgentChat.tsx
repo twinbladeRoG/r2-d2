@@ -1,13 +1,17 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../../utils";
-import { Button, Divider, ScrollArea, Select, Tabs } from "@mantine/core";
+import {
+  ActionIcon,
+  Divider,
+  ScrollArea,
+  Select,
+  Tabs,
+  Tooltip
+} from "@mantine/core";
 import { v4 as uuid } from "uuid";
 import ChatInput from "../chat/ChatInput";
 import ChatMessage from "../chat/ChatMessage";
-import {
-  useAgentChatConversation,
-  useAgentWorkflow
-} from "../../apis/queries/agent.queries";
+import { useAgentWorkflow } from "../../apis/queries/agent.queries";
 import {
   EventStreamContentType,
   fetchEventSource
@@ -20,15 +24,16 @@ import useChatMessages, { IMessage } from "./hooks";
 import AgentGraph from "./AgentGraph";
 import { ReactFlowProvider } from "@xyflow/react";
 import InterruptForm from "./InterruptForm";
+import { Icon } from "@iconify/react";
 
-interface ChatProps {
+interface AgentChatProps {
   className?: string;
+  agentName: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const AgentChat: React.FC<ChatProps> = ({ className }) => {
-  const [agentName, setAgentName] = useState<string>("web_search_agent");
+const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
   const workflow = useAgentWorkflow(agentName);
   const navigate = useNavigate();
 
@@ -40,13 +45,12 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
     isInterrupted,
     setIsInterrupted,
     conversationId,
+    setConversationId,
     visitedNodes,
     appendVisitedNode,
     setVisitedNodes
   } = useChatMessages();
   const [isStreaming, setIsStreaming] = useState(false);
-
-  const agentConversation = useAgentChatConversation(agentName, conversationId);
 
   const handleSubmit = async (
     message: string,
@@ -175,17 +179,25 @@ const AgentChat: React.FC<ChatProps> = ({ className }) => {
             ]}
             value={agentName}
             onChange={(value) => {
-              setAgentName(value!);
               setMessages([]);
+              setConversationId(null);
+              setIsInterrupted(false);
+              navigate(`/agent/${value}`);
             }}
           />
 
-          <Button
-            size="sm"
-            disabled={!conversationId}
-            onClick={() => agentConversation.refetch()}>
-            History
-          </Button>
+          <Tooltip label="New Conversation">
+            <ActionIcon
+              variant="subtle"
+              ml="auto"
+              onClick={() => {
+                setMessages([]);
+                setConversationId(null);
+                setIsInterrupted(false);
+              }}>
+              <Icon icon="mdi:chat-plus" className="text-2xl" />
+            </ActionIcon>
+          </Tooltip>
         </div>
 
         <Divider className="my-3" />
