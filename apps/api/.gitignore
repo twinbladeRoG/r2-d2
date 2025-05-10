@@ -9,3 +9,5 @@ uploads/**/*.*
 
 **/outputs/*.*
 !**/outputs/.gitkeep
+
+qdrant_data/
