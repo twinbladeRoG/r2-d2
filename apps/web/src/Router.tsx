@@ -4,7 +4,6 @@ import Login from "./pages/login";
 import RootLayout from "./modules/shared/RootLayout";
 import NotFound from "./modules/shared/NotFound";
 import Documents from "./pages/documents";
-import Extraction from "./pages/extraction";
 import ExtractionStatus from "./modules/knowledge-base/ExtractionStatus";
 import AgentChatPage from "./pages/agent-chat";
 
@@ -25,10 +24,7 @@ const router = createBrowserRouter([
       { path: "documents", element: <Documents /> },
       {
         path: "extraction",
-        children: [
-          { index: true, element: <Extraction /> },
-          { path: ":id", element: <ExtractionStatus /> }
-        ]
+        children: [{ path: ":id", element: <ExtractionStatus /> }]
       }
     ]
   },

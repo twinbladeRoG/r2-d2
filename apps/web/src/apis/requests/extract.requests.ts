@@ -9,3 +9,11 @@ export const extractDocument = (fileId: string) =>
 
 export const scheduleExtractDocument = (fileId: string) =>
   http.post<null>(`/api/v1/document-extraction/${fileId}/schedule`);
+
+export const getExtractedDocumentSections = (fileId: string) =>
+  http.get<IExtractedSection[]>(
+    `/api/v1/document-extraction/${fileId}/sections`
+  );
+
+export const getExtractedUsageLogs = (fileId: string) =>
+  http.get<IUsageLog>(`/api/v1/document-extraction/${fileId}/usage-log`);

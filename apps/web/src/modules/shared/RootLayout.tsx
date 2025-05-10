@@ -99,11 +99,6 @@ const RootLayout = () => {
               label="Documents"
               leftSection={<Icon icon="mdi:file-document-multiple" />}
             />
-            <AppNavLink
-              to="/extraction"
-              label="Document Extraction"
-              leftSection={<Icon icon="mdi:file-document-box-search" />}
-            />
           </NavLink>
         </AppShell.Section>
 

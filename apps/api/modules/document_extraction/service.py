@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 
 from aiokafka import AIOKafkaProducer
-from sqlmodel import Session
+from sqlmodel import Session, delete, select
 
 from api.error import UserDefinedException
 from api.logger import logger
@@ -108,7 +108,21 @@ class DocumentExtractorService:
 
             await asyncio.sleep(10)
 
-            # TODO: Remove previous extraction results
+            # Remove previous extraction logs
+            # and extracted sections
+            remove_statement = delete(ExtractedSection).where(
+                ExtractedSection.document_id == document.id
+            )
+            session.exec(remove_statement)
+            session.commit()
+
+            remove_statement = delete(ExtractionUsageLog).where(
+                ExtractionUsageLog.document_id == document.id
+            )
+            session.exec(remove_statement)
+            session.commit()
+
+            logger.debug(">> EXTRACTION LOGS REMOVED")
 
             response = self._get_sections(session, document, result)
 
@@ -157,3 +171,26 @@ class DocumentExtractorService:
         except Exception as e:
             logger.error(f"Error sending message to Kafka: {e}")
         return None
+
+    def get_document_extracted_section(self, session: Session, document: Document):
+        """
+        Get the extracted sections for a document.
+        """
+        statement = select(ExtractedSection).where(
+            ExtractedSection.document_id == document.id
+        )
+        sections = session.exec(statement).all()
+
+        return sections
+
+    def get_document_extraction_usage_log(self, session: Session, document: Document):
+        """
+        Get the extraction usage log for a document.
+        """
+        statement = select(ExtractionUsageLog).where(
+            ExtractionUsageLog.document_id == document.id
+        )
+
+        usage_log = session.exec(statement).first()
+
+        return usage_log

@@ -27,6 +27,7 @@ dependencies = [
     "pyjwt>=2.10.1",
     "python-dotenv>=1.0.1",
     "python-multipart>=0.0.20",
+    "qdrant-client>=1.12.1",
     "rq>=2.3.1",
     "sqlmodel>=0.0.24",
     "theflow>=0.8.6",

@@ -5,6 +5,8 @@ import {
   DefaultMantineColor,
   Divider,
   Skeleton,
+  Tabs,
+  Text,
   Title
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -16,6 +18,13 @@ import { bytesToSize } from "../../utils";
 import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import { EXTRACTION_STATUS } from "../../types";
+import {
+  useExtractedDocumentSections,
+  useExtractedUsageLogs
+} from "../../apis/queries/extract.queries";
+import ResourceCharts from "./ResourceCharts";
+import Markdown from "marked-react";
+import renderer from "../markdown";
 
 dayjs.extend(advancedFormat);
 
@@ -25,6 +34,8 @@ const ExtractionStatus = () => {
   const { id } = useParams();
   const document = useFile(id as string);
   const [status, setStatus] = useState<string | null>(null);
+  const sections = useExtractedDocumentSections(id as string);
+  const usageLogs = useExtractedUsageLogs(id as string);
 
   const { readyState } = useWebSocket(
     `ws://${API_URL}/api/v1/document-extraction/${id}/ws?token=${localStorage.getItem("ACCESS_TOKEN")}`,
@@ -99,27 +110,71 @@ const ExtractionStatus = () => {
       <Divider my="md" />
 
       {document.data ? (
-        <Card>
-          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-            <p className="text-gray-400 whitespace-nowrap">Filename: </p>
-            <p className="font-bold break-all">{document.data?.filename}</p>
+        <>
+          <Card>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+              <p className="text-gray-400 whitespace-nowrap">Filename: </p>
+              <p className="font-bold break-all">{document.data?.filename}</p>
 
-            <p className="text-gray-400 whitespace-nowrap">Size: </p>
-            <p className="font-bold">
-              {bytesToSize(document.data?.content_length)}
-            </p>
+              <p className="text-gray-400 whitespace-nowrap">Size: </p>
+              <p className="font-bold">
+                {bytesToSize(document.data?.content_length)}
+              </p>
 
-            <p className="text-gray-400 whitespace-nowrap">Created At: </p>
-            <p className="font-bold">
-              {dayjs(document.data?.created_at).format("Do MMM YY, h:mm A")}
-            </p>
+              <p className="text-gray-400 whitespace-nowrap">Created At: </p>
+              <p className="font-bold">
+                {dayjs(document.data?.created_at).format("Do MMM YY, h:mm A")}
+              </p>
 
-            <p className="text-gray-400 whitespace-nowrap">
-              Extraction Status:{" "}
-            </p>
-            <Badge color={extractionStatusColor}>{status}</Badge>
-          </div>
-        </Card>
+              <p className="text-gray-400 whitespace-nowrap">
+                Extraction Status:{" "}
+              </p>
+              <Badge color={extractionStatusColor}>{status}</Badge>
+            </div>
+          </Card>
+
+          {status === EXTRACTION_STATUS.COMPLETED && (
+            <>
+              <Tabs defaultValue="sections" mt="lg">
+                <Tabs.List>
+                  <Tabs.Tab value="sections">Sections</Tabs.Tab>
+                  <Tabs.Tab value="usage">Usage</Tabs.Tab>
+                </Tabs.List>
+
+                <Tabs.Panel value="sections">
+                  <Card my="lg">
+                    {sections.data?.map((item) => (
+                      <Card
+                        mb="lg"
+                        key={item.id}
+                        bg={item?.type === "table" ? "dark.9" : "gray.9"}>
+                        <div>
+                          <Markdown breaks renderer={renderer}>
+                            {item.content}
+                          </Markdown>
+                        </div>
+
+                        <Divider my="md" />
+
+                        <Text size="sm" c="gray.6">
+                          Page Number: {item.page_number}
+                        </Text>
+                      </Card>
+                    ))}
+                  </Card>
+                </Tabs.Panel>
+
+                <Tabs.Panel value="usage">
+                  <Card my="lg">
+                    {usageLogs.data ? (
+                      <ResourceCharts usage={usageLogs.data?.usage_log} />
+                    ) : null}
+                  </Card>
+                </Tabs.Panel>
+              </Tabs>
+            </>
+          )}
+        </>
       ) : (
         <Skeleton height={200} />
       )}

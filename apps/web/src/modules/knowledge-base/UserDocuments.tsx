@@ -1,5 +1,6 @@
 import { useUserFiles } from "../../apis/queries/file-storage.queries";
 import {
+  Anchor,
   Badge,
   Card,
   DefaultMantineColor,
@@ -56,13 +57,17 @@ const UserDocuments = () => {
       columnHelper.accessor("filename", {
         header: "File",
         cell: (info) => (
-          <div className="flex items-center gap-2">
-            <Icon
-              icon={getFileIcon(info.row.original.content_type)}
-              className="text-2xl"
-            />
-            <span className="break-all">{info.getValue()}</span>
-          </div>
+          <Anchor
+            href={`/extraction/${info.row.original.id}`}
+            title={info.getValue()}>
+            <div className="flex gap-2 items-center">
+              <Icon
+                icon={getFileIcon(info.row.original.content_type)}
+                className="text-2xl"
+              />
+              <span className="">{info.row.original.original_filename}</span>
+            </div>
+          </Anchor>
         )
       }),
       columnHelper.accessor("extraction_status", {

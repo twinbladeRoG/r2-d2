@@ -56,6 +56,38 @@ async def schedule_extraction(
     return None
 
 
+@router.get("/{file_id}/sections")
+def get_extracted_sections(
+    session: SessionDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+    document_extraction_service: DocumentExtractorDep,
+    file_id: str,
+):
+    document = file_storage_service.get_file(user, session, file_id)
+    sections = document_extraction_service.get_document_extracted_section(
+        session, document
+    )
+
+    return sections
+
+
+@router.get("/{file_id}/usage-log")
+def get_extraction_usage_log(
+    session: SessionDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+    document_extraction_service: DocumentExtractorDep,
+    file_id: str,
+):
+    document = file_storage_service.get_file(user, session, file_id)
+    sections = document_extraction_service.get_document_extraction_usage_log(
+        session, document
+    )
+
+    return sections
+
+
 @router.websocket("/{file_id}/ws")
 async def file_extraction_status(
     websocket: WebSocket,

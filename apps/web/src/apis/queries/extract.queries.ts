@@ -1,6 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   extractDocument,
+  getExtractedDocumentSections,
+  getExtractedUsageLogs,
   scheduleExtractDocument
 } from "../requests/extract.requests";
 import { notifications } from "@mantine/notifications";
@@ -32,4 +34,24 @@ export const useScheduleExtractDocument = () =>
         color: "red"
       });
     }
+  });
+
+export const useExtractedDocumentSections = (id: string) =>
+  useQuery({
+    queryKey: ["extracted-document-sections", id],
+    queryFn: async () => {
+      const res = await getExtractedDocumentSections(id);
+      return res;
+    },
+    enabled: !!id
+  });
+
+export const useExtractedUsageLogs = (id: string) =>
+  useQuery({
+    queryKey: ["extracted-usage-logs", id],
+    queryFn: async () => {
+      const res = await getExtractedUsageLogs(id);
+      return res;
+    },
+    enabled: !!id
   });

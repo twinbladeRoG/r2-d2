@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
 
+    QDRANT_HOST: str = "localhost"
+    QDRANT_PORT: int = 6333
+
     @computed_field
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
