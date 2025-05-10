@@ -135,13 +135,13 @@ const ExtractionStatus = () => {
 
           {status === EXTRACTION_STATUS.COMPLETED && (
             <>
-              <Tabs defaultValue="sections" mt="lg">
+              <Tabs defaultValue="pages" mt="lg">
                 <Tabs.List>
-                  <Tabs.Tab value="sections">Sections</Tabs.Tab>
+                  <Tabs.Tab value="pages">Pages</Tabs.Tab>
                   <Tabs.Tab value="usage">Usage</Tabs.Tab>
                 </Tabs.List>
 
-                <Tabs.Panel value="sections">
+                <Tabs.Panel value="pages">
                   <Card my="lg">
                     {sections.data?.map((item) => (
                       <Card

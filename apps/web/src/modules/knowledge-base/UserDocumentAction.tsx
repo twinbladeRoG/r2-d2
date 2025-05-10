@@ -80,6 +80,7 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
         <ActionIcon
           variant="light"
           color="blue"
+          disabled={extract.isPending}
           loading={scheduleExtraction.isPending}
           onClick={handleScheduleExtract}>
           <Icon icon="mdi:file-clock" />
@@ -89,6 +90,7 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
       <ActionIcon
         variant="light"
         color="red"
+        disabled={extract.isPending}
         loading={removeFile.isPending}
         onClick={handleRemoveFile}>
         <Icon icon="mdi:trash" />
