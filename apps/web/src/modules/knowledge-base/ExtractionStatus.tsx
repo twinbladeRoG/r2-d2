@@ -6,7 +6,6 @@ import {
   Divider,
   Skeleton,
   Tabs,
-  Text,
   Title
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -23,8 +22,7 @@ import {
   useExtractedUsageLogs
 } from "../../apis/queries/extract.queries";
 import ResourceCharts from "./ResourceCharts";
-import Markdown from "marked-react";
-import renderer from "../markdown";
+import ExtractedSectionList from "./ExtractedSectionList";
 
 dayjs.extend(advancedFormat);
 
@@ -94,8 +92,13 @@ const ExtractionStatus = () => {
   useEffect(() => {
     if (status === null && document.data !== undefined) {
       setStatus(document.data.extraction_status);
+
+      if (document.data.extraction_status === EXTRACTION_STATUS.COMPLETED) {
+        sections.refetch();
+        usageLogs.refetch();
+      }
     }
-  }, [status, document.data]);
+  }, [status, document.data, sections, usageLogs]);
 
   return (
     <section>
@@ -143,24 +146,7 @@ const ExtractionStatus = () => {
 
                 <Tabs.Panel value="pages">
                   <Card my="lg">
-                    {sections.data?.map((item) => (
-                      <Card
-                        mb="lg"
-                        key={item.id}
-                        bg={item?.type === "table" ? "dark.9" : "gray.9"}>
-                        <div>
-                          <Markdown breaks renderer={renderer}>
-                            {item.content}
-                          </Markdown>
-                        </div>
-
-                        <Divider my="md" />
-
-                        <Text size="sm" c="gray.6">
-                          Page Number: {item.page_number}
-                        </Text>
-                      </Card>
-                    ))}
+                    <ExtractedSectionList sections={sections.data} />
                   </Card>
                 </Tabs.Panel>
 
