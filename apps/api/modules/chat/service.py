@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 from sqlmodel import Session, select
 
 from api.core.config import settings
@@ -8,7 +8,7 @@ from api.models import ChatMessage, ChatMessageCreate, Conversation, User
 
 class ChatService:
     def __init__(self):
-        self.client = openai.OpenAI(
+        self.client = OpenAI(
             base_url=f"{settings.LLM_HOST}/v1", api_key=settings.LLM_SECRET
         )
 

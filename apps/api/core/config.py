@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     LLM_HOST: str
     LLM_SECRET: str
 
+    EMBEDDING_MODEL_NAME: str
+    EMBEDDING_MODEL_HOST: str
+    EMBEDDING_MODEL_SECRET: str
+
     KAFKA_BOOTSTRAP_SERVER: str
 
     LOG_LEVEL: Literal["INFO", "DEBUG", "ERROR", "WARNING", "CRITICAL"] = "INFO"
