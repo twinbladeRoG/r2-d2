@@ -88,7 +88,7 @@ const UserDocuments = () => {
       }),
       columnHelper.display({
         id: "actions",
-        header: "Actions",
+        header: () => <p className="text-center">Actions</p>,
         cell: (info) => <UserDocumentAction document={info.row.original} />
       })
     ],

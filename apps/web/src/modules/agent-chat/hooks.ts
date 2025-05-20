@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { IChatMessage } from "../../types";
+import { IChatMessage, ICitation } from "../../types";
 import { IToolResult } from "../chat/ChatMessage";
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
 
@@ -14,6 +14,7 @@ export interface IMessage {
   tools?: Array<IToolResult>;
   hasInterrupt?: true;
   interruptMessage?: string;
+  citations?: Array<ICitation> | null;
 }
 
 const useChatMessages = () => {

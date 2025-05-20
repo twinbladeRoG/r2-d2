@@ -10,6 +10,7 @@ import {
   useScheduleExtractDocument
 } from "../../apis/queries/extract.queries";
 import { useNavigate } from "react-router-dom";
+import { useCreateKnowledgeBase } from "../../apis/queries/knowledge-base.queries";
 
 interface UserDocumentActionProps {
   document: IFile;
@@ -47,6 +48,7 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
   const navigate = useNavigate();
   const extract = useExtractDocument();
   const scheduleExtraction = useScheduleExtractDocument();
+  const createKnowledgeBase = useCreateKnowledgeBase();
 
   const handleExtract = () => {
     extract.mutate(document.id);
@@ -64,9 +66,35 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
     });
   };
 
+  const handleCreateKnowledgeBase = () => {
+    createKnowledgeBase.mutate(document.id, {
+      onSuccess: () =>
+        notifications.show({
+          color: "green",
+          message: "Document added to knowledge base"
+        })
+    });
+  };
+
   return (
-    <div className="flex gap-2">
-      <Tooltip label="Extract Document">
+    <div className="flex gap-2 justify-end">
+      <Tooltip
+        label={
+          document.extraction_status === "completed"
+            ? "Create Knowledge Base"
+            : "Kindly extract the document first"
+        }>
+        <ActionIcon
+          variant="light"
+          color="violet"
+          disabled={document.extraction_status !== "completed"}
+          loading={createKnowledgeBase.isPending}
+          onClick={handleCreateKnowledgeBase}>
+          <Icon icon="mdi:stars" />
+        </ActionIcon>
+      </Tooltip>
+
+      <Tooltip label="Extract Now">
         <ActionIcon
           variant="light"
           color="green"
@@ -76,7 +104,7 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
         </ActionIcon>
       </Tooltip>
 
-      <Tooltip label="Schedule Extract Document">
+      <Tooltip label="Schedule Extraction">
         <ActionIcon
           variant="light"
           color="blue"

@@ -5,6 +5,7 @@ import Markdown from "marked-react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { IMessage } from "../agent-chat/hooks";
 import renderer from "../markdown";
+import { Link } from "react-router-dom";
 
 export interface IDuckDuckGoToolResult {
   snippet: string;
@@ -38,7 +39,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isStreaming,
   tools,
   hasInterrupt,
-  interruptMessage
+  interruptMessage,
+  citations
 }) => {
   // for reasoning model, we split the message into content and thought
   // TODO: implement this as remark/rehype plugin in the future
@@ -171,6 +173,53 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               </Accordion.Item>
             </Accordion>
           ))}
+        </div>
+      ) : null}
+
+      {citations && citations.length > 0 ? (
+        <div className="mt-4">
+          <Accordion
+            defaultValue={null}
+            mt="lg"
+            classNames={{ content: "!p-0" }}>
+            <Accordion.Item value="citations">
+              <Accordion.Control icon={<Icon icon="mdi:book-open" />}>
+                Citations
+              </Accordion.Control>
+
+              <Accordion.Panel>
+                <Accordion defaultValue={null} mt="lg">
+                  {citations.map((citation, index) => (
+                    <Accordion.Item
+                      key={index}
+                      value={String(citation.point_id)}>
+                      <Accordion.Control>
+                        <Anchor
+                          component={Link}
+                          size="sm"
+                          target="_blank"
+                          to={`/extraction/${citation.document.id}`}>
+                          {citation.document.original_filename}
+                        </Anchor>
+                        <div className="flex gap-2">
+                          <p className="text-xs">
+                            Page: <strong>{citation.page_number}</strong>
+                          </p>
+                          <p className="text-xs">
+                            Score: <strong>{citation.score.toFixed(3)}</strong>
+                          </p>
+                        </div>
+                      </Accordion.Control>
+
+                      <Accordion.Panel>
+                        <p className="text-sm">{citation.chuck}</p>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  ))}
+                </Accordion>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
         </div>
       ) : null}
     </div>

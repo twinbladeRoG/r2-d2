@@ -14,3 +14,7 @@ export interface IChatMessageRequest {
   role: string;
   conversation_id?: string | null | undefined;
 }
+
+export interface IDocumentChatMessageRequest extends IChatMessageRequest {
+  document_id: string;
+}

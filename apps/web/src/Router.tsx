@@ -6,6 +6,7 @@ import NotFound from "./modules/shared/NotFound";
 import Documents from "./pages/documents";
 import ExtractionStatus from "./modules/knowledge-base/ExtractionStatus";
 import AgentChatPage from "./pages/agent-chat";
+import DocumentChat from "./pages/rag";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
         ]
       },
       { path: "documents", element: <Documents /> },
+      { path: "document-chat", element: <DocumentChat /> },
       {
         path: "extraction",
         children: [{ path: ":id", element: <ExtractionStatus /> }]

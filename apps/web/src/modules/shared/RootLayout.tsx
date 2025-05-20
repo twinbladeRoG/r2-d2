@@ -88,6 +88,11 @@ const RootLayout = () => {
             label="Agent Chat"
             leftSection={<Icon icon="mdi:face-agent" />}
           />
+          <AppNavLink
+            to="/document-chat"
+            label="RAG"
+            leftSection={<Icon icon="carbon:rag" />}
+          />
           <NavLink
             href="#required-for-focus"
             label="Knowledge Base"

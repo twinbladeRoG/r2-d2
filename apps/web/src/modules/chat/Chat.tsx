@@ -9,6 +9,7 @@ import { Icon } from "@iconify/react";
 import { IChatMessage, IConversation } from "../../types";
 import { v4 as uuid } from "uuid";
 import ChatMessage from "./ChatMessage";
+
 interface ChatProps {
   className?: string;
 }

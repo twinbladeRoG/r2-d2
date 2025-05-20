@@ -34,6 +34,19 @@ export interface IChatMessage extends IBaseEntity {
   conversation_id: string;
 }
 
+export interface ICitation {
+  point_id: number;
+  score: number;
+  document: IFile;
+  page_number: number;
+  chuck: string;
+}
+
+export interface IChatMessageWithCitations {
+  chat_message: IChatMessage;
+  citations?: Array<ICitation> | null;
+}
+
 export interface ICpuUsage {
   cpu_count: number;
   total_memory: number;

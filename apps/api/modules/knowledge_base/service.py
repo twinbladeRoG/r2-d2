@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -72,7 +74,7 @@ class KnowledgeBaseService:
                 collection_name=COLLECTION_NAME,
                 points=[
                     PointStruct(
-                        id=i,
+                        id=uuid4().hex,
                         vector=embedding.embedding,
                         payload={
                             "page_number": chunk[0],
@@ -88,12 +90,16 @@ class KnowledgeBaseService:
         return collection.points_count
 
     def search_from_vector_store(self, document_id: str, query: str):
+        logger.debug(
+            f"Searching in vector store for document_id: {document_id} with query: {query}"
+        )
+
         query_embedding = self.create_embeddings(query)
 
         results = self.vector_store.search(
             collection_name=COLLECTION_NAME,
             query_vector=query_embedding.data[0].embedding,
-            limit=10,
+            limit=5,
             query_filter=Filter(
                 must=[
                     FieldCondition(
@@ -101,6 +107,10 @@ class KnowledgeBaseService:
                     )
                 ]
             ),
+        )
+
+        logger.debug(
+            f"Search results retrieved for document_id: {document_id} is {len(results)} for query: {query}"
         )
 
         return results

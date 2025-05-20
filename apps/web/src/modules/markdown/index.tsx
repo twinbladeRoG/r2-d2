@@ -1,4 +1,4 @@
-import { Anchor, Code, Table, Title } from "@mantine/core";
+import { Anchor, Code, Divider, Table, Title } from "@mantine/core";
 import { ReactRenderer } from "marked-react";
 import React from "react";
 
@@ -43,6 +43,9 @@ const renderer = {
         {text}
       </Anchor>
     );
+  },
+  hr() {
+    return <Divider my="lg" />;
   }
 } satisfies Partial<ReactRenderer>;
 
