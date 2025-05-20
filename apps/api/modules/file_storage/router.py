@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile
 
 from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
 from api.models import Document
+from api.modules.knowledge_base.dependencies import KnowledgeBaseServiceDep
 
 router = APIRouter(prefix="/file-storage", tags=["File Storage"])
 
@@ -46,6 +47,7 @@ def delete_file(
     session: SessionDep,
     user: CurrentUser,
     file_storage_service: FileStorageServiceDep,
+    knowledge_base_service: KnowledgeBaseServiceDep,
 ):
-    file_storage_service.remove_file(session, user, file_id)
+    file_storage_service.remove_file(session, user, knowledge_base_service, file_id)
     return None

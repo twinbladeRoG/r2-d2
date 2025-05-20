@@ -4,7 +4,7 @@ import Login from "./pages/login";
 import RootLayout from "./modules/shared/RootLayout";
 import NotFound from "./modules/shared/NotFound";
 import Documents from "./pages/documents";
-import ExtractionStatus from "./modules/knowledge-base/ExtractionStatus";
+import ExtractionStatus from "./modules/documents/ExtractionStatus";
 import AgentChatPage from "./pages/agent-chat";
 import DocumentChat from "./pages/rag";
 

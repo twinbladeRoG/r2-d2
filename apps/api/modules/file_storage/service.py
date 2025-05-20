@@ -1,14 +1,14 @@
-import os
 from pathlib import Path
 from uuid import uuid4
 
 import aiofiles
 from fastapi import UploadFile
-from sqlmodel import Session, delete, select
+from sqlmodel import Session, select
 
 from api.error import UserDefinedException
 from api.models import Document, DocumentBase, User
 from api.modules.document_extraction.schemas import ExtractionStatus
+from api.modules.knowledge_base.service import KnowledgeBaseService
 
 UPLOAD_PATH = Path("uploads")
 
@@ -92,7 +92,13 @@ class FileStorageService:
 
         return results
 
-    def remove_file(self, session: Session, user: User, file_id: str):
+    def remove_file(
+        self,
+        session: Session,
+        user: User,
+        knowledge_base_service: KnowledgeBaseService,
+        file_id: str,
+    ):
         statement = select(Document).where(Document.id == file_id)
         document = session.exec(statement).one()
 
@@ -116,11 +122,13 @@ class FileStorageService:
                 "DOCUMENT_DOES_NOT_EXISTS",
             )
 
-        os.remove(file_path)
+        # os.remove(file_path)
 
-        remove_statement = delete(Document).where(Document.id == file_id)
-        session.exec(remove_statement)
-        session.commit()
+        knowledge_base_service.remove_document_from_vector_store(document_id=file_id)
+
+        # remove_statement = delete(Document).where(Document.id == file_id)
+        # session.exec(remove_statement)
+        # session.commit()
 
     def update_job_id(self, session: Session, user: User, file_id: str, job_id: str):
         document = self.get_file(user, session, file_id)

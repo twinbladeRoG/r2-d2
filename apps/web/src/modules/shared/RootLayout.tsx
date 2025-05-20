@@ -81,28 +81,40 @@ const RootLayout = () => {
           <AppNavLink
             to="/"
             label="Chat"
-            leftSection={<Icon icon="mdi:chat-bubble" />}
+            leftSection={<Icon icon="mingcute:ai-line" className="text-xl" />}
           />
           <AppNavLink
             to="/agent"
             label="Agent Chat"
-            leftSection={<Icon icon="mdi:face-agent" />}
+            leftSection={<Icon icon="mdi:face-agent" className="text-xl" />}
           />
           <AppNavLink
             to="/document-chat"
             label="RAG"
-            leftSection={<Icon icon="carbon:rag" />}
+            leftSection={<Icon icon="carbon:rag" className="text-xl" />}
           />
+
           <NavLink
-            href="#required-for-focus"
-            label="Knowledge Base"
-            leftSection={<Icon icon="mdi:bookshelf" />}
+            href="#data-lab"
+            label="Data Lab"
+            leftSection={
+              <Icon icon="hugeicons:ai-chemistry-03" className="text-xl" />
+            }
             childrenOffset={28}
             defaultOpened>
             <AppNavLink
               to="/documents"
               label="Documents"
-              leftSection={<Icon icon="mdi:file-document-multiple" />}
+              leftSection={
+                <Icon icon="mdi:file-document-multiple" className="text-xl" />
+              }
+            />
+            <AppNavLink
+              to="/knowledge-base"
+              label="Knowledge Base"
+              leftSection={
+                <Icon icon="hugeicons:ai-book" className="text-xl" />
+              }
             />
           </NavLink>
         </AppShell.Section>

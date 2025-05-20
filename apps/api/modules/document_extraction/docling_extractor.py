@@ -92,11 +92,13 @@ class DoclingExtractor:
     def _extract_df_tables(self, result: ConversionResult):
         """Uses the conversation result object to export the tables as pandas dataframe"""
 
-        tables = []
+        tables: list[ExtractedDocument] = []
+
         for table in result.document.tables:
             table_df: pd.DataFrame = table.export_to_dataframe()
             markdown_table = table_df.to_markdown()
-            page_number = table.prov[0].page_no
+            provenance = table.prov[0]
+            page_number = provenance.page_no
 
             caption_refs = [caption.get_ref().cref for caption in table.captions]
 
@@ -119,6 +121,32 @@ class DoclingExtractor:
             tables.append(doc)
 
         return tables
+
+    def _extract_text(self, result: ConversionResult) -> list[ExtractedDocument]:
+        texts: list[ExtractedDocument] = []
+        page_number_to_text = defaultdict(list)
+
+        for text_obj in result.document.texts:
+            page_number = text_obj.prov[0].page_no
+            page_number_to_text[page_number].append(text_obj.text)
+
+        for page_number, txts in page_number_to_text.items():
+            doc = ExtractedDocument(
+                text="\n".join(txts), page_number=page_number, type=DocumentType.TEXT
+            )
+            texts.append(doc)
+
+        return texts
+
+    def _extract_figures(self, result_dict: dict):
+        """
+        TODO: Handle Figures like Images, Plots
+        """
+        figures = []
+        gen_caption_count = 0
+
+        for figure_obj in result_dict.get("pictures", []):
+            continue
 
     def _extract_tables(self, result_dict: dict) -> list[ExtractedDocument]:
         """
@@ -151,29 +179,6 @@ class DoclingExtractor:
             tables.append(doc)
 
         return tables
-
-    def _extract_text(self, result: ConversionResult) -> list[ExtractedDocument]:
-        texts = []
-        page_number_to_text = defaultdict(list)
-
-        for text_obj in result.document.texts:
-            page_number = text_obj.prov[0].page_no
-            page_number_to_text[page_number].append(text_obj.text)
-
-        for page_number, txts in page_number_to_text.items():
-            doc = ExtractedDocument(
-                text="\n".join(txts), page_number=page_number, type=DocumentType.TEXT
-            )
-            texts.append(doc)
-
-        return texts
-
-    def _extract_figures(self, result_dict: dict):
-        figures = []
-        gen_caption_count = 0
-
-        for figure_obj in result_dict.get("pictures", []):
-            continue
 
     def _parse_table(self, table_obj: dict) -> str:
         """Convert docling table object to markdown table"""

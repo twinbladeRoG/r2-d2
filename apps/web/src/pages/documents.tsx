@@ -1,5 +1,5 @@
-import UploadForm from "../modules/knowledge-base/UploadForm";
-import UserDocuments from "../modules/knowledge-base/UserDocuments";
+import UploadForm from "../modules/documents/UploadForm";
+import UserDocuments from "../modules/documents/UserDocuments";
 
 const Documents = () => {
   return (

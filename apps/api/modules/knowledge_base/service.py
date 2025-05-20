@@ -2,7 +2,6 @@ from uuid import uuid4
 
 from openai import OpenAI
 from qdrant_client import QdrantClient
-from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.models import (
     Distance,
     FieldCondition,
@@ -34,20 +33,26 @@ class KnowledgeBaseService:
         """
         return [text[i : i + chunk_size] for i in range(0, len(text), chunk_size)]
 
-    def _initialize_vector_collection(self, collection_name: str):
-        try:
-            self.vector_store.get_collection(collection_name=collection_name)
-            logger.info(f"Collection {collection_name} already exists.")
-        except UnexpectedResponse:
-            logger.info(f"Collection {collection_name} does not exist. Creating it.")
+    def _initialize_vector_collection(
+        self, collection_name: str, raise_if_not_found: bool = False
+    ):
+        collection_exists = self.vector_store.collection_exists(
+            collection_name=collection_name
+        )
+
+        if collection_exists == True:
+            logger.info(f"Collection '{collection_name}' already exists.")
+        else:
+            logger.info(f"Collection '{collection_name}' does not exist. Creating it.")
+
+            if raise_if_not_found:
+                raise UserDefinedException(
+                    "Collection does not exists", "COLLECTION_DOES_NOT_EXISTS"
+                )
+
             self.vector_store.create_collection(
                 collection_name=collection_name,
                 vectors_config=VectorParams(size=1024, distance=Distance.COSINE),
-            )
-        except Exception as e:
-            logger.error(f"Error creating collection: {e}")
-            raise UserDefinedException(
-                f"Unable to create qdrant collection {e}", "QDRANT_CREATE"
             )
 
     def create_embeddings(self, input: str | list[str]):
@@ -114,3 +119,50 @@ class KnowledgeBaseService:
         )
 
         return results
+
+    def get_count_of_points_from_collection(
+        self, document_id: str, collection_name: str = COLLECTION_NAME
+    ):
+        self._initialize_vector_collection(collection_name, True)
+
+        results = self.vector_store.count(
+            collection_name=collection_name,
+            count_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="document_id", match=MatchValue(value=document_id)
+                    )
+                ]
+            ),
+        )
+
+        logger.debug(
+            f'Found {results} points for collection: "{collection_name}" for document: {document_id}'
+        )
+
+        return results.count
+
+    def remove_document_from_vector_store(
+        self, document_id: str, collection_name: str = COLLECTION_NAME
+    ):
+        count = self.get_count_of_points_from_collection(document_id, collection_name)
+
+        if count == 0:
+            return
+
+        result = self.vector_store.delete(
+            collection_name=collection_name,
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="document_id", match=MatchValue(value=document_id)
+                    )
+                ]
+            ),
+        )
+
+        logger.debug(
+            f'Removed points for collection: "{collection_name}" for document: {document_id}, with status: "{result.status}"'
+        )
+
+        return result.status
