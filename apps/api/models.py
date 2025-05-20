@@ -1,3 +1,7 @@
+"""
+Should contain all models which should be a DB Table
+"""
+
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -94,6 +98,19 @@ class DocumentBase(SQLModel):
     )
 
 
+class DocumentKnowledgeBaseLink(SQLModel, table=True):
+    """
+    Joint/Pivot Table for store N-to-N relations between Documents and Knowledge Base
+    """
+
+    document_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4, foreign_key="document.id", primary_key=True
+    )
+    knowledge_base_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4, foreign_key="knowledgebase.id", primary_key=True
+    )
+
+
 class Document(DocumentBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: Optional[datetime] = Field(
@@ -111,6 +128,9 @@ class Document(DocumentBase, table=True):
     )
     extraction_usage_logs: list["ExtractionUsageLog"] = Relationship(
         back_populates="document", cascade_delete=True
+    )
+    knowledge_bases: list["KnowledgeBase"] = Relationship(
+        back_populates="documents", link_model=DocumentKnowledgeBaseLink
     )
 
 
@@ -205,3 +225,20 @@ class ExtractionUsageLog(SQLModel, table=True):
 class ExtractionResult(SQLModel):
     sections: list[ExtractedSection] = []
     usage_log: ExtractionUsageLog
+
+
+class KnowledgeBase(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    name: str = Field(min_length=3, max_length=255)
+    vector_store_name: str = Field(min_length=3, max_length=255)
+
+    documents: list[Document] = Relationship(
+        back_populates="knowledge_bases", link_model=DocumentKnowledgeBaseLink
+    )
