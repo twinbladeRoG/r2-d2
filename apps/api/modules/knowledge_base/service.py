@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import re
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from openai import OpenAI
@@ -10,11 +14,17 @@ from qdrant_client.models import (
     PointStruct,
     VectorParams,
 )
+from sqlmodel import Session, delete, or_, select
 
 from api.core.config import settings
 from api.error import UserDefinedException
 from api.logger import logger
-from api.models import Document
+from api.models import Document, KnowledgeBase, User
+
+from .schemas import KnowledgeBaseCreate
+
+if TYPE_CHECKING:
+    from api.modules.file_storage.service import FileStorageService
 
 COLLECTION_NAME = "knowledge_base"
 
@@ -166,3 +176,125 @@ class KnowledgeBaseService:
         )
 
         return result.status
+
+    def slugify_name(self, name: str):
+        return re.sub(r"\s+", "_", name.strip().lower())
+
+    def _check_if_knowledge_base_exists(self, session: Session, name: str):
+        statement = select(KnowledgeBase).where(
+            or_(
+                KnowledgeBase.name == name,
+                KnowledgeBase.vector_store_name == self.slugify_name(name),
+            )
+        )
+        knowledge_base = session.exec(statement).first()
+
+        if knowledge_base is None:
+            return False
+
+        return True
+
+    def create_knowledge_base(
+        self,
+        session: Session,
+        user: User,
+        file_service: FileStorageService,
+        payload: KnowledgeBaseCreate,
+    ):
+        does_knowledge_base_exists = self._check_if_knowledge_base_exists(
+            session, payload.name
+        )
+
+        if does_knowledge_base_exists:
+            raise UserDefinedException(
+                f"A knowledge base already exists with name: {payload.name}",
+                "ALREADY_EXISTS",
+            )
+
+        knowledge_base = KnowledgeBase(
+            name=payload.name,
+            vector_store_name=self.slugify_name(payload.name),
+        )
+
+        self._initialize_vector_collection(
+            collection_name=knowledge_base.vector_store_name
+        )
+
+        session.add(knowledge_base)
+        session.commit()
+        session.refresh(knowledge_base)
+
+        documents: list[Document] = []
+
+        for documentId in payload.documents:
+            logger.debug(
+                f"Adding document: {documentId} to knowledge base: {knowledge_base.id}"
+            )
+
+            try:
+                document = file_service.get_file(user, session, documentId)
+                documents.append(document)
+            except UserDefinedException as e:
+                logger.error(
+                    f"Error getting document: {documentId} for knowledge base: {knowledge_base.id}, error: {e}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Error getting document: {documentId} for knowledge base: {knowledge_base.id}, error: {e}"
+                )
+
+        knowledge_base.documents = documents
+
+        session.add(knowledge_base)
+        session.commit()
+        session.refresh(knowledge_base)
+
+        return knowledge_base
+
+    def get_knowledge_bases(self, session: Session, user: User):
+        statement = select(KnowledgeBase)
+        knowledge_bases = session.exec(statement).all()
+
+        return knowledge_bases
+
+    def get_knowledge_base_by_id(self, session: Session, user: User, id: str):
+        statement = select(KnowledgeBase).where(KnowledgeBase.id == id)
+        knowledge_base = session.exec(statement).one()
+
+        if knowledge_base is None:
+            raise UserDefinedException(
+                f"No knowledge base found with id: {id}", "NOT_FOUND"
+            )
+
+        return knowledge_base
+
+    def delete_knowledge_base(self, session: Session, user: User, id: str):
+        knowledge_base = self.get_knowledge_base_by_id(session, user, id)
+
+        try:
+            logger.debug(
+                f"Deleting vector store collection: {knowledge_base.vector_store_name}"
+            )
+
+            self.vector_store.delete_collection(
+                collection_name=knowledge_base.vector_store_name
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Error deleting vector store collection: {knowledge_base.vector_store_name}, error: {e}"
+            )
+            raise UserDefinedException(
+                f"Error deleting vector store collection: {knowledge_base.vector_store_name}",
+                "VECTOR_STORE_DELETION_ERROR",
+            )
+
+        statement = delete(KnowledgeBase).where(KnowledgeBase.id == id)
+        session.exec(statement)
+        session.commit()
+
+        logger.debug(
+            f"Knowledge base with id: {id} deleted successfully. Vector store removed."
+        )
+
+        return knowledge_base

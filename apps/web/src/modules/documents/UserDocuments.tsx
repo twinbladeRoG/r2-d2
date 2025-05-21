@@ -2,8 +2,9 @@ import { useUserFiles } from "../../apis/queries/file-storage.queries";
 import {
   Anchor,
   Badge,
+  Button,
   Card,
-  DefaultMantineColor,
+  Checkbox,
   Skeleton,
   Table
 } from "@mantine/core";
@@ -11,49 +12,43 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  RowSelectionState,
   useReactTable
 } from "@tanstack/react-table";
-import { ExtractionStatus, IFile } from "../../types";
+import { IFile } from "../../types";
 import dayjs from "dayjs";
-import { bytesToSize } from "../../utils";
-import { MIME_TYPES } from "@mantine/dropzone";
+import { bytesToSize, getFileIcon, getStatusColor } from "../../utils";
 import { Icon } from "@iconify/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import UserDocumentAction from "./UserDocumentAction";
+import CreateKnowledgeBase from "../knowledge-base/CreateKnowledgeBase";
+import { useDisclosure } from "@mantine/hooks";
 
 const columnHelper = createColumnHelper<IFile>();
-
-const getFileIcon = (type: string) => {
-  switch (type) {
-    case MIME_TYPES.pdf:
-      return "mdi:file-pdf";
-    case MIME_TYPES.docx:
-      return "mdi:file-word";
-    default:
-      return "mdi:file-document";
-  }
-};
 
 const UserDocuments = () => {
   const documents = useUserFiles();
 
-  const getStatusColor = (status: ExtractionStatus): DefaultMantineColor => {
-    switch (status) {
-      case "pending":
-        return "yellow";
-      case "in_progress":
-        return "blue";
-      case "completed":
-        return "green";
-      case "failed":
-        return "red";
-      default:
-        return "gray";
-    }
-  };
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const columns = useMemo(
     () => [
+      columnHelper.accessor("id", {
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected()}
+            onChange={table.getToggleAllRowsSelectedHandler()}
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            disabled={!row.getCanSelect()}
+            onChange={row.getToggleSelectedHandler()}
+          />
+        )
+      }),
       columnHelper.accessor("filename", {
         header: "File",
         cell: (info) => (
@@ -98,11 +93,37 @@ const UserDocuments = () => {
   const table = useReactTable({
     data: documents.data ?? [],
     columns,
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      rowSelection
+    },
+    getRowId: (row) => row.id
   });
+
+  const [opened, handlers] = useDisclosure(false);
 
   return (
     <Card>
+      <div className="flex mb-4">
+        <Button
+          size="sm"
+          color="violet"
+          onClick={() => handlers.open()}
+          disabled={table.getSelectedRowModel().rows.length === 0}
+          leftSection={<Icon icon="hugeicons:ai-book" />}>
+          Create Knowledge Base
+        </Button>
+
+        <CreateKnowledgeBase
+          opened={opened}
+          onClose={handlers.close}
+          selectedDocumentIds={table
+            .getSelectedRowModel()
+            .rows.map((row) => row.id)}
+        />
+      </div>
+
       <Table>
         <Table.Thead>
           {table.getHeaderGroups().map((headerGroup) => (

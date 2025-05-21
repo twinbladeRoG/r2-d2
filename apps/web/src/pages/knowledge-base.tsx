@@ -1,7 +1,14 @@
+import { Divider, Title } from "@mantine/core";
+import KnowledgeBases from "../modules/knowledge-base/KnowledgeBases";
+
 const KnowledgeBasePage = () => {
   return (
     <section>
-      <h1>Knowledge Base</h1>
+      <Title order={2}>Knowledge Base</Title>
+
+      <Divider my="lg" />
+
+      <KnowledgeBases />
     </section>
   );
 };

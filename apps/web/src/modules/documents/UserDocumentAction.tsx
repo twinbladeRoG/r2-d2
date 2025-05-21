@@ -10,7 +10,7 @@ import {
   useScheduleExtractDocument
 } from "../../apis/queries/extract.queries";
 import { useNavigate } from "react-router-dom";
-import { useCreateKnowledgeBase } from "../../apis/queries/knowledge-base.queries";
+import { useCreateKnowledgeBaseFromDocument } from "../../apis/queries/knowledge-base.queries";
 
 interface UserDocumentActionProps {
   document: IFile;
@@ -20,6 +20,10 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
   document
 }) => {
   const removeFile = useRemoveFile();
+  const navigate = useNavigate();
+  const extract = useExtractDocument();
+  const scheduleExtraction = useScheduleExtractDocument();
+  const createKnowledgeBase = useCreateKnowledgeBaseFromDocument();
 
   const handleRemoveFile = () => {
     modals.openConfirmModal({
@@ -44,11 +48,6 @@ const UserDocumentAction: React.FC<UserDocumentActionProps> = ({
       }
     });
   };
-
-  const navigate = useNavigate();
-  const extract = useExtractDocument();
-  const scheduleExtraction = useScheduleExtractDocument();
-  const createKnowledgeBase = useCreateKnowledgeBase();
 
   const handleExtract = () => {
     extract.mutate(document.id);

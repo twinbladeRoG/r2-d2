@@ -1,5 +1,8 @@
+import { MIME_TYPES } from "@mantine/dropzone";
 import clsx, { ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ExtractionStatus } from "../types";
+import { DefaultMantineColor } from "@mantine/core";
 
 /**
  * Converts a given number of bytes into a human-readable string representation
@@ -25,3 +28,31 @@ export const bytesToSize = (bytes: number) => {
 };
 
 export const cn = (...classes: ClassValue[]) => twMerge(clsx(...classes));
+
+export const getFileIcon = (type: string) => {
+  switch (type) {
+    case MIME_TYPES.pdf:
+      return "mdi:file-pdf";
+    case MIME_TYPES.docx:
+      return "mdi:file-word";
+    default:
+      return "mdi:file-document";
+  }
+};
+
+export const getStatusColor = (
+  status: ExtractionStatus
+): DefaultMantineColor => {
+  switch (status) {
+    case "pending":
+      return "yellow";
+    case "in_progress":
+      return "blue";
+    case "completed":
+      return "green";
+    case "failed":
+      return "red";
+    default:
+      return "gray";
+  }
+};

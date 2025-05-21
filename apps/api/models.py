@@ -227,7 +227,7 @@ class ExtractionResult(SQLModel):
     usage_log: ExtractionUsageLog
 
 
-class KnowledgeBase(SQLModel, table=True):
+class KnowledgeBaseBase(SQLModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: Optional[datetime] = Field(
         sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
@@ -236,7 +236,20 @@ class KnowledgeBase(SQLModel, table=True):
         sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
     )
 
-    name: str = Field(min_length=3, max_length=255)
+    name: str = Field(min_length=3, max_length=255, unique=True)
+    vector_store_name: str = Field(min_length=3, max_length=255)
+
+
+class KnowledgeBase(KnowledgeBaseBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, nullable=False), default=None
+    )
+    updated_at: Optional[datetime] = Field(
+        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow), default=None
+    )
+
+    name: str = Field(min_length=3, max_length=255, unique=True)
     vector_store_name: str = Field(min_length=3, max_length=255)
 
     documents: list[Document] = Relationship(

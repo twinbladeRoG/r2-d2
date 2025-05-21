@@ -115,3 +115,17 @@ export interface IAgentWorkflow {
     edges: Array<IAgentWorkflowEdge>;
   };
 }
+
+export interface IKnowledgeBase extends IBaseEntity {
+  name: string;
+  vector_store_name: string;
+}
+
+export interface ICreateKnowledgeBaseRequest {
+  name: string;
+  documents: string[];
+}
+
+export interface IKnowledgeBaseWithDocuments extends IKnowledgeBase {
+  documents: Array<IFile>;
+}
