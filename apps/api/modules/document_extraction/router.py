@@ -18,9 +18,30 @@ from api.modules.kafka.dependencies import KafkaProducerDep
 from api.modules.kafka.enums import KafkaTopic
 
 from .dependencies import DocumentExtractorDep
-from .schemas import ExtractionStatus, ScheduledExtraction
+from .schemas import DocumentsForExtraction, ExtractionStatus, ScheduledExtraction
 
 router = APIRouter(prefix="/document-extraction", tags=["Document Extraction"])
+
+
+@router.post("/schedule-extraction")
+async def schedule_files_for_extraction(
+    session: SessionDep,
+    document_extraction_service: DocumentExtractorDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+    producer: KafkaProducerDep,
+    body: DocumentsForExtraction,
+) -> None:
+    for file_id in body.documents:
+        try:
+            document = file_storage_service.get_file(user, session, file_id)
+            await document_extraction_service.schedule_extraction(
+                session, producer, user, document
+            )
+        except Exception as e:
+            logger.error(f"Error scheduling extraction for file {file_id}: {e}")
+            continue
+    return None
 
 
 @router.post("/{file_id}")
@@ -123,6 +144,7 @@ async def file_extraction_status(
             )
             await websocket.send_json(message.model_dump(mode="json"))
             await websocket.close(1000, "Document extraction is completed")
+
         elif document.extraction_status == ExtractionStatus.FAILED:
             message = ScheduledExtraction.model_validate(
                 {
@@ -133,24 +155,30 @@ async def file_extraction_status(
             )
             await websocket.send_json(message.model_dump(mode="json"))
             await websocket.close(1000, "Document extraction failed")
+
         else:
             async for message in consumer:
-                timestamp = datetime.now().strftime("%I:%M%p")
-                logger.info(
-                    f"[{timestamp}] Received message from topic: {message.topic}"
-                )
                 value = json.loads(message.value.decode("utf-8"))
                 pprint(value)  # noqa: T203
                 try:
                     validated_message = ScheduledExtraction.model_validate(value)
-                    await websocket.send_json(value)
 
-                    if validated_message.status in [
-                        ExtractionStatus.COMPLETED,
-                        ExtractionStatus.FAILED,
-                    ]:
-                        await consumer.stop()
-                        await websocket.close(1000, "Document extraction is completed")
+                    if validated_message.file_id == document.id.hex:
+                        timestamp = datetime.now().strftime("%I:%M%p")
+                        logger.info(
+                            f"[{timestamp}] Received message from topic: {message.topic}"
+                        )
+
+                        await websocket.send_json(value)
+
+                        if validated_message.status in [
+                            ExtractionStatus.COMPLETED,
+                            ExtractionStatus.FAILED,
+                        ]:
+                            await consumer.stop()
+                            await websocket.close(
+                                1000, "Document extraction is completed"
+                            )
 
                 except ValidationError as e:
                     logger.error(

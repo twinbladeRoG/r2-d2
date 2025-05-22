@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel, Field, PositiveInt
 
 
 class DocumentType(str, Enum):
@@ -12,6 +12,7 @@ class DocumentType(str, Enum):
 
 class ExtractionStatus(str, Enum):
     PENDING = "pending"
+    IN_QUEUE = "in_queue"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     FAILED = "failed"
@@ -61,3 +62,7 @@ class ScheduledExtraction(BaseModel):
     file_id: str
     user_id: str
     status: ExtractionStatus = ExtractionStatus.PENDING
+
+
+class DocumentsForExtraction(BaseModel):
+    documents: list[str] = Field(min_length=1, max_length=255)

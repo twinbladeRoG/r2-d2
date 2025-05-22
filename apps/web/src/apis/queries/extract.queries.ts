@@ -3,6 +3,7 @@ import {
   extractDocument,
   getExtractedDocumentSections,
   getExtractedUsageLogs,
+  scheduleDocumentsForExtraction,
   scheduleExtractDocument
 } from "../requests/extract.requests";
 import { notifications } from "@mantine/notifications";
@@ -54,4 +55,18 @@ export const useExtractedUsageLogs = (id: string) =>
       return res;
     },
     enabled: !!id
+  });
+
+export const useScheduleDocumentsForExtraction = () =>
+  useMutation({
+    mutationFn: async (fileIds: string[]) => {
+      const res = await scheduleDocumentsForExtraction(fileIds);
+      return res;
+    },
+    onError: (err) => {
+      notifications.show({
+        message: err.message,
+        color: "red"
+      });
+    }
   });

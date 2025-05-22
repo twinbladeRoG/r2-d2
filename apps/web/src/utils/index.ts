@@ -52,6 +52,8 @@ export const getStatusColor = (
       return "green";
     case "failed":
       return "red";
+    case "in_queue":
+      return "orange";
     default:
       return "gray";
   }

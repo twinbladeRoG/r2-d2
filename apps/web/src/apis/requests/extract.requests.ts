@@ -17,3 +17,8 @@ export const getExtractedDocumentSections = (fileId: string) =>
 
 export const getExtractedUsageLogs = (fileId: string) =>
   http.get<IUsageLog>(`/api/v1/document-extraction/${fileId}/usage-log`);
+
+export const scheduleDocumentsForExtraction = (fileIds: string[]) =>
+  http.post<null>(`/api/v1/document-extraction/schedule-extraction`, {
+    documents: fileIds
+  });

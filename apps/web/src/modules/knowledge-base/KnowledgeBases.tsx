@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { useKnowledgeBases } from "../../apis/queries/knowledge-base.queries";
 import KnowledgeBaseCard from "./KnowledgeBaseCard";
 import KnowledgeBaseDetails from "./KnowledgeBaseDetails";
 import { Divider } from "@mantine/core";
+import { useSearchParams } from "react-router-dom";
 
 const KnowledgeBases = () => {
   const knowledgeBases = useKnowledgeBases();
 
-  const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<
-    string | null
-  >(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const selectedKnowledgeBaseId = useMemo(
+    () => searchParams.get("id"),
+    [searchParams]
+  );
 
   return (
     <div>
@@ -18,7 +22,9 @@ const KnowledgeBases = () => {
           <KnowledgeBaseCard
             knowledgeBase={item}
             key={item.id}
-            onClick={(value) => setSelectedKnowledgeBaseId(value.id)}
+            onClick={(value) =>
+              setSearchParams({ id: value.id }, { replace: true })
+            }
           />
         ))}
       </div>

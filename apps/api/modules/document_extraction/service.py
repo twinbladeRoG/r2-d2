@@ -168,6 +168,14 @@ class DocumentExtractorService:
             await kafka_producer.send_and_wait(
                 KafkaTopic.EXTRACT_DOCUMENT.value, value=message.model_dump(mode="json")
             )
+
+            await self._change_document_status(
+                session,
+                kafka_producer,
+                document,
+                user.id.hex,
+                ExtractionStatus.IN_QUEUE,
+            )
         except Exception as e:
             logger.error(f"Error sending message to Kafka: {e}")
         return None

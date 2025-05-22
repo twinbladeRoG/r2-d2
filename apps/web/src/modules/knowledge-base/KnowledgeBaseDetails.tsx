@@ -34,6 +34,7 @@ const KnowledgeBaseDetails: React.FC<KnowledgeBaseDetailsProps> = ({
       <Card>
         <KnowledgeBaseDocuments
           documents={knowledgeBase.data?.documents ?? []}
+          knowledgeBaseId={knowledgeBaseId}
         />
       </Card>
     </>

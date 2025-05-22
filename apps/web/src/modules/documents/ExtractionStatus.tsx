@@ -54,7 +54,11 @@ const ExtractionStatus = () => {
 
         setStatus(message.status as string);
       }
-    }
+    },
+    document.isSuccess &&
+      ![EXTRACTION_STATUS.PENDING, EXTRACTION_STATUS.COMPLETED].includes(
+        document.data.extraction_status as "pending" | "completed"
+      )
   );
 
   const webSocketStatusColor = useMemo((): DefaultMantineColor => {
@@ -84,6 +88,8 @@ const ExtractionStatus = () => {
         return "green";
       case EXTRACTION_STATUS.FAILED:
         return "red";
+      case EXTRACTION_STATUS.IN_QUEUE:
+        return "orange";
       default:
         return "gray";
     }
