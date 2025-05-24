@@ -185,6 +185,16 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
           leftSection={<Icon icon="ph:vector-three-duotone" />}>
           Create Embeddings
         </Button>
+
+        <Button
+          component={Link}
+          to={`/document-chat?id=${knowledgeBaseId}`}
+          size="sm"
+          color="green"
+          variant="light"
+          leftSection={<Icon icon="ri:chat-ai-line" />}>
+          Chat
+        </Button>
       </div>
 
       <Table>

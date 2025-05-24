@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../utils";
 import { Divider, ScrollArea, Select } from "@mantine/core";
 import ChatInput from "../chat/ChatInput";
@@ -8,6 +8,7 @@ import { notifications } from "@mantine/notifications";
 import ChatMessage from "../chat/ChatMessage";
 import { IMessage } from "../agent-chat/hooks";
 import { useKnowledgeBases } from "../../apis/queries/knowledge-base.queries";
+import { useSearchParams } from "react-router-dom";
 
 interface RagChatProps {
   className?: string;
@@ -18,8 +19,11 @@ const RagChat: React.FC<RagChatProps> = ({ className }) => {
   const knowledgeBases = useKnowledgeBases();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [knowledgeBaseId, setKnowledgeBaseId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const knowledgeBaseId = useMemo(() => searchParams.get("id"), [searchParams]);
 
   useLayoutEffect(() => {
     scrollRef.current!.scrollTo({
@@ -31,7 +35,8 @@ const RagChat: React.FC<RagChatProps> = ({ className }) => {
   const handleSubmit = (message: string) => {
     if (knowledgeBaseId == null) {
       notifications.show({
-        message: "Please select a document",
+        message: "Please select a knowledge base to chat with.",
+        title: "Knowledge Base Required",
         color: "yellow"
       });
 
@@ -114,7 +119,10 @@ const RagChat: React.FC<RagChatProps> = ({ className }) => {
           size="xs"
           placeholder="Select Knowledge Base"
           value={knowledgeBaseId}
-          onChange={(value) => setKnowledgeBaseId(value)}
+          onChange={(value) => {
+            if (value !== null)
+              setSearchParams({ id: value }, { replace: true });
+          }}
         />
       </div>
 
