@@ -6,7 +6,7 @@ from api.models import ChatMessage, ChatMessageCreate, Document
 
 
 class DocumentChatMessageCreate(ChatMessageCreate):
-    document_id: uuid.UUID
+    knowledge_base_id: uuid.UUID
 
 
 class Citation(SQLModel):

@@ -11,8 +11,8 @@ router = APIRouter(prefix="/document-chat", tags=["Document Chat"])
 
 @router.post("/", response_model=ChatMessageWithCitations)
 def chat(
-    chat_service: DocumentChatServiceDep,
     chat_message: DocumentChatMessageCreate,
+    chat_service: DocumentChatServiceDep,
     knowledge_base_service: KnowledgeBaseServiceDep,
     file_storage_service: FileStorageServiceDep,
     user: CurrentUser,

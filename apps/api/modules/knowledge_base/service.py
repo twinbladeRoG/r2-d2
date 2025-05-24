@@ -179,7 +179,7 @@ class KnowledgeBaseService:
             f"Searching in vector store: {knowledge_base.vector_store_name} with query: {query}"
         )
 
-        query_embedding = self.create_embeddings(query)
+        query_embedding = self._create_embeddings(query)
 
         results = self.vector_store.search(
             collection_name=knowledge_base.vector_store_name,

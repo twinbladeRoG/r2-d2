@@ -16,5 +16,5 @@ export interface IChatMessageRequest {
 }
 
 export interface IDocumentChatMessageRequest extends IChatMessageRequest {
-  document_id: string;
+  knowledge_base_id: string;
 }

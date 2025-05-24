@@ -45,7 +45,11 @@ class DocumentChatService:
 
         # Get relevant chunks from the knowledge base
         points = knowledge_base_service.search_from_vector_store(
-            document_id=str(chat_message.document_id), query=chat_message.message
+            session=session,
+            user=user,
+            knowledge_base_id=str(chat_message.knowledge_base_id),
+            query=chat_message.message,
+            top_k=5,
         )
         retrieved_chunks = [point.payload["text"] for point in points]
         context = "\n\n".join(retrieved_chunks)

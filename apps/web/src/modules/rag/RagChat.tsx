@@ -2,12 +2,12 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../../utils";
 import { Divider, ScrollArea, Select } from "@mantine/core";
 import ChatInput from "../chat/ChatInput";
-import { useUserFiles } from "../../apis/queries/file-storage.queries";
 import { v4 as uuid } from "uuid";
 import { useDocumentChat } from "../../apis/queries/document-chat.queries";
 import { notifications } from "@mantine/notifications";
 import ChatMessage from "../chat/ChatMessage";
 import { IMessage } from "../agent-chat/hooks";
+import { useKnowledgeBases } from "../../apis/queries/knowledge-base.queries";
 
 interface RagChatProps {
   className?: string;
@@ -15,10 +15,10 @@ interface RagChatProps {
 
 const RagChat: React.FC<RagChatProps> = ({ className }) => {
   const chat = useDocumentChat();
-  const documents = useUserFiles();
+  const knowledgeBases = useKnowledgeBases();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [documentId, setDocumentId] = useState<string | null>(null);
+  const [knowledgeBaseId, setKnowledgeBaseId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -29,7 +29,7 @@ const RagChat: React.FC<RagChatProps> = ({ className }) => {
   }, [messages]);
 
   const handleSubmit = (message: string) => {
-    if (documentId == null) {
+    if (knowledgeBaseId == null) {
       notifications.show({
         message: "Please select a document",
         color: "yellow"
@@ -60,7 +60,7 @@ const RagChat: React.FC<RagChatProps> = ({ className }) => {
         message,
         role: "user",
         conversation_id: conversationId,
-        document_id: String(documentId)
+        knowledge_base_id: String(knowledgeBaseId)
       },
       {
         onSuccess: ({ chat_message, citations }) => {
@@ -106,14 +106,15 @@ const RagChat: React.FC<RagChatProps> = ({ className }) => {
         <h1 className="font-bold">RAG</h1>
 
         <Select
-          data={documents.data?.map((document) => ({
-            value: document.id,
-            label: document.original_filename
+          searchable
+          data={knowledgeBases.data?.map((knowledgeBase) => ({
+            value: knowledgeBase.id,
+            label: knowledgeBase.name
           }))}
           size="xs"
-          placeholder="Select Document"
-          value={documentId}
-          onChange={(value) => setDocumentId(value)}
+          placeholder="Select Knowledge Base"
+          value={knowledgeBaseId}
+          onChange={(value) => setKnowledgeBaseId(value)}
         />
       </div>
 
