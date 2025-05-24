@@ -5,9 +5,6 @@ import {
 } from "../../types";
 import http from "../http";
 
-export const createKnowledgeBaseFromDocument = (documentId: string) =>
-  http.post<null>(`/api/v1/knowledge-base/${documentId}`);
-
 export const createKnowledgeBase = (payload: ICreateKnowledgeBaseRequest) =>
   http.post<IKnowledgeBase>("/api/v1/knowledge-base/", payload);
 
@@ -20,4 +17,23 @@ export const deleteKnowledgeBase = (knowledgeBaseId: string) =>
 export const getKnowledgeBase = (knowledgeBaseId: string) =>
   http.get<IKnowledgeBaseWithDocuments>(
     `/api/v1/knowledge-base/${knowledgeBaseId}`
+  );
+
+export const addDocumentToKnowledgeBase = (
+  knowledgeBaseId: string,
+  documents: string[]
+) =>
+  http.put<IKnowledgeBaseWithDocuments>(
+    `/api/v1/knowledge-base/${knowledgeBaseId}/documents`,
+    {
+      document_ids: documents
+    }
+  );
+
+export const removeDocumentFromKnowledgeBase = (
+  knowledgeBaseId: string,
+  documentId: string
+) =>
+  http.delete<IKnowledgeBaseWithDocuments>(
+    `/api/v1/knowledge-base/${knowledgeBaseId}/documents/${documentId}`
   );

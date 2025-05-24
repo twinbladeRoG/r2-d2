@@ -129,3 +129,9 @@ export interface ICreateKnowledgeBaseRequest {
 export interface IKnowledgeBaseWithDocuments extends IKnowledgeBase {
   documents: Array<IFile>;
 }
+
+export interface IFileFilterQuery {
+  exclude?: string[];
+  search?: string;
+  extraction_status?: ExtractionStatus;
+}

@@ -4,7 +4,11 @@ from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
 from api.models import KnowledgeBase
 
 from .dependencies import KnowledgeBaseServiceDep
-from .schemas import KnowledgeBaseCreate, KnowledgeBaseWithDocuments
+from .schemas import (
+    KnowledgeBaseAddDocumentsRequest,
+    KnowledgeBaseCreate,
+    KnowledgeBaseWithDocuments,
+)
 
 router = APIRouter(prefix="/knowledge-base", tags=["Knowledge Base"])
 
@@ -33,23 +37,6 @@ def create_knowledge_base(
     return result
 
 
-@router.post("/{document_id}")
-def create_knowledge_base_for_document(
-    document_id: str,
-    session: SessionDep,
-    user: CurrentUser,
-    knowledge_base_service: KnowledgeBaseServiceDep,
-    document_service: FileStorageServiceDep,
-):
-    document = document_service.get_file(
-        user=user, session=session, file_id=document_id
-    )
-
-    embeddings = knowledge_base_service.store_to_vector_store(document)
-
-    return {"embedding_points": embeddings}
-
-
 @router.get("/{knowledge_base_id}", response_model=KnowledgeBaseWithDocuments)
 def get_knowledge_base(
     knowledge_base_id: str,
@@ -73,4 +60,36 @@ def delete_knowledge_base(
     result = knowledge_base_service.delete_knowledge_base(
         session, user, knowledge_base_id
     )
+    return result
+
+
+@router.put("/{knowledge_base_id}/documents", response_model=KnowledgeBaseWithDocuments)
+def add_documents_to_knowledge_base(
+    knowledge_base_id: str,
+    session: SessionDep,
+    user: CurrentUser,
+    knowledge_base_service: KnowledgeBaseServiceDep,
+    file_storage_service: FileStorageServiceDep,
+    body: KnowledgeBaseAddDocumentsRequest,
+):
+    result = knowledge_base_service.add_document_to_knowledge_base(
+        session, user, file_storage_service, knowledge_base_id, body.document_ids
+    )
+
+    return result
+
+
+@router.delete("/{knowledge_base_id}/documents/{document_id}")
+def remove_document_from_knowledge_base(
+    knowledge_base_id: str,
+    document_id: str,
+    session: SessionDep,
+    user: CurrentUser,
+    knowledge_base_service: KnowledgeBaseServiceDep,
+    file_storage_service: FileStorageServiceDep,
+):
+    result = knowledge_base_service.remove_document_from_knowledge_base(
+        session, user, file_storage_service, knowledge_base_id, document_id
+    )
+
     return result

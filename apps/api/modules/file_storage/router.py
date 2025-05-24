@@ -1,8 +1,12 @@
-from fastapi import APIRouter, UploadFile
+from typing import Annotated
+
+from fastapi import APIRouter, Query, UploadFile
 
 from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
 from api.models import Document
 from api.modules.knowledge_base.dependencies import KnowledgeBaseServiceDep
+
+from .schemas import FileFilterParams
 
 router = APIRouter(prefix="/file-storage", tags=["File Storage"])
 
@@ -12,8 +16,9 @@ def get_all_files(
     session: SessionDep,
     user: CurrentUser,
     file_storage_service: FileStorageServiceDep,
+    query: Annotated[FileFilterParams, Query()],
 ) -> list[Document]:
-    files = file_storage_service.get_user_files(session, user)
+    files = file_storage_service.get_user_files(session, user, query)
     return files
 
 

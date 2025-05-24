@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
 from openai import OpenAI
 from qdrant_client import QdrantClient
@@ -11,7 +10,6 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
-    PointStruct,
     VectorParams,
 )
 from sqlmodel import Session, delete, or_, select
@@ -25,8 +23,6 @@ from .schemas import KnowledgeBaseCreate
 
 if TYPE_CHECKING:
     from api.modules.file_storage.service import FileStorageService
-
-COLLECTION_NAME = "knowledge_base"
 
 
 class KnowledgeBaseService:
@@ -73,38 +69,9 @@ class KnowledgeBaseService:
         )
         return embeddings
 
-    def store_to_vector_store(self, document: Document):
-        chunks: list[tuple[int, str]] = []
-
-        for section in document.extracted_sections:
-            section_chunks = self._split_text_to_chunks(section.content, 512)
-            chunks.extend([(section.page_number, chunk) for chunk in section_chunks])
-
-        embeddings = self.create_embeddings(input=[chunk[1] for chunk in chunks])
-
-        self._initialize_vector_collection(COLLECTION_NAME)
-
-        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings.data)):
-            self.vector_store.upload_points(
-                collection_name=COLLECTION_NAME,
-                points=[
-                    PointStruct(
-                        id=uuid4().hex,
-                        vector=embedding.embedding,
-                        payload={
-                            "page_number": chunk[0],
-                            "text": chunk[1],
-                            "document_id": document.id,
-                        },
-                    )
-                ],
-            )
-
-        collection = self.vector_store.get_collection(collection_name=COLLECTION_NAME)
-
-        return collection.points_count
-
-    def search_from_vector_store(self, document_id: str, query: str):
+    def search_from_vector_store(
+        self, collection_name: str, document_id: str, query: str
+    ):
         logger.debug(
             f"Searching in vector store for document_id: {document_id} with query: {query}"
         )
@@ -112,7 +79,7 @@ class KnowledgeBaseService:
         query_embedding = self.create_embeddings(query)
 
         results = self.vector_store.search(
-            collection_name=COLLECTION_NAME,
+            collection_name=collection_name,
             query_vector=query_embedding.data[0].embedding,
             limit=5,
             query_filter=Filter(
@@ -131,7 +98,7 @@ class KnowledgeBaseService:
         return results
 
     def get_count_of_points_from_collection(
-        self, document_id: str, collection_name: str = COLLECTION_NAME
+        self, document_id: str, collection_name: str
     ):
         self._initialize_vector_collection(collection_name, True)
 
@@ -152,9 +119,7 @@ class KnowledgeBaseService:
 
         return results.count
 
-    def remove_document_from_vector_store(
-        self, document_id: str, collection_name: str = COLLECTION_NAME
-    ):
+    def remove_document_from_vector_store(self, document_id: str, collection_name: str):
         count = self.get_count_of_points_from_collection(document_id, collection_name)
 
         if count == 0:
@@ -295,6 +260,62 @@ class KnowledgeBaseService:
 
         logger.debug(
             f"Knowledge base with id: {id} deleted successfully. Vector store removed."
+        )
+
+        return knowledge_base
+
+    def add_document_to_knowledge_base(
+        self,
+        session: Session,
+        user: User,
+        file_service: FileStorageService,
+        knowledge_base_id: str,
+        document_ids: list[str],
+    ):
+        knowledge_base = self.get_knowledge_base_by_id(session, user, knowledge_base_id)
+
+        for document_id in document_ids:
+            document = file_service.get_file(user, session, document_id)
+
+            if document in knowledge_base.documents:
+                raise UserDefinedException(
+                    f"Document with id: {document_id} already exists in knowledge base: {knowledge_base_id}",
+                    "DOCUMENT_ALREADY_EXISTS",
+                )
+
+            knowledge_base.documents.append(document)
+
+        session.commit()
+
+        logger.debug(
+            f"{len(document_ids)} documents added to knowledge base: {knowledge_base_id}"
+        )
+
+        return knowledge_base
+
+    def remove_document_from_knowledge_base(
+        self,
+        session: Session,
+        user: User,
+        file_service: FileStorageService,
+        knowledge_base_id: str,
+        document_id: str,
+    ):
+        knowledge_base = self.get_knowledge_base_by_id(session, user, knowledge_base_id)
+
+        document = file_service.get_file(user, session, document_id)
+
+        if document not in knowledge_base.documents:
+            raise UserDefinedException(
+                f"Document with id: {document_id} is not part of knowledge base: {knowledge_base_id}",
+                "DOCUMENT_NOT_IN_KNOWLEDGE_BASE",
+            )
+
+        knowledge_base.documents.remove(document)
+        session.commit()
+
+        logger.debug(
+            f"Document with id: {document_id} removed from knowledge base: {knowledge_base_id}"
         )
 
         return knowledge_base

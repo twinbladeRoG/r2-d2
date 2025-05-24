@@ -14,6 +14,9 @@ import dayjs from "dayjs";
 import KnowledgeBaseDocumentAction from "./KnowledgeBaseDocumentAction";
 import { useScheduleDocumentsForExtraction } from "../../apis/queries/extract.queries";
 import { useQueryClient } from "@tanstack/react-query";
+import DocumentsModal from "./DocumentsModal";
+import { useDisclosure } from "@mantine/hooks";
+import { useAddDocumentToKnowledgeBase } from "../../apis/queries/knowledge-base.queries";
 
 interface KnowledgeBaseDocumentsProps {
   documents: Array<IFile>;
@@ -105,6 +108,8 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
 
   const scheduleForExtraction = useScheduleDocumentsForExtraction();
   const queryClient = useQueryClient();
+  const addDocumentsToKnowledgeBase =
+    useAddDocumentToKnowledgeBase(knowledgeBaseId);
 
   const handleDocumentsForExtraction = () => {
     const selectedRows = table.getSelectedRowModel().rows.map((row) => row.id);
@@ -115,6 +120,14 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
           queryKey: ["knowledge-base", knowledgeBaseId]
         });
       }
+    });
+  };
+
+  const [showDocumentsModal, documentsModalHandler] = useDisclosure();
+
+  const handleAddDocuments = (documents: string[]) => {
+    addDocumentsToKnowledgeBase.mutate(documents, {
+      onSuccess: () => documentsModalHandler.close()
     });
   };
 
@@ -130,6 +143,21 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
           leftSection={<Icon icon="hugeicons:ai-book" />}>
           Schedule for Extraction
         </Button>
+
+        <Button
+          size="sm"
+          color="green"
+          leftSection={<Icon icon="mdi:plus" />}
+          onClick={documentsModalHandler.open}>
+          Add Document
+        </Button>
+        <DocumentsModal
+          opened={showDocumentsModal}
+          onClose={documentsModalHandler.close}
+          excludedFileIds={documents.map((doc) => doc.id)}
+          onAddDocuments={handleAddDocuments}
+          isAdding={addDocumentsToKnowledgeBase.isPending}
+        />
       </div>
 
       <Table>

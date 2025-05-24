@@ -1,9 +1,20 @@
 import { FileWithPath } from "@mantine/dropzone";
-import { IFile } from "../../types";
+import { IFile, IFileFilterQuery } from "../../types";
 import http from "../http";
 
-export const getUsersFiles = async () =>
-  http.get<Array<IFile>>("/api/v1/file-storage");
+export const getUsersFiles = async (filter?: IFileFilterQuery) => {
+  const params = new URLSearchParams();
+  if (filter?.search) params.append("search", filter.search);
+  if (filter?.extraction_status)
+    params.append("extraction_status", filter.extraction_status);
+  if (filter?.exclude) {
+    filter.exclude.forEach((item) => {
+      params.append("exclude", item);
+    });
+  }
+
+  return http.get<Array<IFile>>(`/api/v1/file-storage/?${params.toString()}`);
+};
 
 export const uploadFile = (file: File | FileWithPath) => {
   const headers = new Headers();

@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRemoveDocumentFromKnowledgeBase } from "../../apis/queries/knowledge-base.queries";
 
 const API_URL = import.meta.env.VITE_API_URL_BASE;
 
@@ -63,21 +64,34 @@ const KnowledgeBaseDocumentAction: React.FC<
 
   const isProcessing = readyState === ReadyState.OPEN;
 
+  const removeFileFromKnowledgeBase =
+    useRemoveDocumentFromKnowledgeBase(knowledgeBaseId);
+
   return (
     <div className="flex gap-2 justify-end items-center">
       {isProcessing ? (
         <Loader size="xs" />
       ) : (
-        <Tooltip label="Schedule Extraction">
+        <>
+          <Tooltip label="Schedule Extraction">
+            <ActionIcon
+              variant="light"
+              color="blue"
+              disabled={isProcessing}
+              loading={scheduleExtraction.isPending}
+              onClick={handleScheduleExtract}>
+              <Icon icon="mdi:file-clock" />
+            </ActionIcon>
+          </Tooltip>
+
           <ActionIcon
             variant="light"
-            color="blue"
-            disabled={isProcessing}
-            loading={scheduleExtraction.isPending}
-            onClick={handleScheduleExtract}>
-            <Icon icon="mdi:file-clock" />
+            color="red"
+            loading={removeFileFromKnowledgeBase.isPending}
+            onClick={() => removeFileFromKnowledgeBase.mutate(document.id)}>
+            <Icon icon="mdi:trash" />
           </ActionIcon>
-        </Tooltip>
+        </>
       )}
     </div>
   );

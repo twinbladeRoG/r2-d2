@@ -6,6 +6,7 @@ import {
   removeFile,
   uploadFile
 } from "../requests/files-storage.requests";
+import { IFileFilterQuery } from "../../types";
 
 export const useUploadFile = () => {
   const queryClient = useQueryClient();
@@ -21,11 +22,11 @@ export const useUploadFile = () => {
   });
 };
 
-export const useUserFiles = () =>
+export const useUserFiles = (filter?: IFileFilterQuery) =>
   useQuery({
-    queryKey: ["user-files"],
+    queryKey: ["user-files", filter],
     queryFn: async () => {
-      const res = await getUsersFiles();
+      const res = await getUsersFiles(filter);
       return res;
     }
   });

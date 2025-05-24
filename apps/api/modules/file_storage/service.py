@@ -11,6 +11,8 @@ from api.models import Document, DocumentBase, User
 from api.modules.document_extraction.schemas import ExtractionStatus
 from api.modules.knowledge_base.service import KnowledgeBaseService
 
+from .schemas import FileFilterParams
+
 UPLOAD_PATH = Path("uploads")
 
 
@@ -87,8 +89,22 @@ class FileStorageService:
 
         return file_path
 
-    def get_user_files(self, session: Session, user: User) -> list[Document]:
+    def get_user_files(
+        self, session: Session, user: User, query: FileFilterParams
+    ) -> list[Document]:
         statement = select(Document).where(Document.owner_id == user.id)
+
+        if query.search:
+            statement = statement.where(
+                Document.original_filename.ilike(f"%{query.search}%")
+            )
+        if query.extraction_status:
+            statement = statement.where(
+                Document.extraction_status == query.extraction_status
+            )
+        if query.exclude:
+            statement = statement.where(Document.id.not_in(query.exclude))
+
         results = session.exec(statement)
 
         return results
