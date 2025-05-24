@@ -1,5 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, Modal, TextInput } from "@mantine/core";
+import { Button, Modal, Textarea, TextInput } from "@mantine/core";
 import { FormProvider, useForm } from "react-hook-form";
 import * as yup from "yup";
 import { useCreateKnowledgeBase } from "../../apis/queries/knowledge-base.queries";
@@ -7,7 +7,8 @@ import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 
 const schema = yup.object({
-  name: yup.string().trim().required("Required")
+  name: yup.string().trim().required("Required"),
+  description: yup.string().trim().optional()
 });
 
 interface CreateKnowledgeBaseProps {
@@ -23,7 +24,7 @@ const CreateKnowledgeBase: React.FC<CreateKnowledgeBaseProps> = ({
 }) => {
   const form = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { name: "" }
+    defaultValues: { name: "", description: undefined }
   });
 
   const createKnowledgeBase = useCreateKnowledgeBase();
@@ -40,7 +41,11 @@ const CreateKnowledgeBase: React.FC<CreateKnowledgeBaseProps> = ({
     }
 
     createKnowledgeBase.mutate(
-      { name: data.name, documents: selectedDocumentIds },
+      {
+        name: data.name,
+        description: data.description,
+        documents: selectedDocumentIds
+      },
       {
         onSuccess: () => {
           notifications.show({
@@ -65,8 +70,16 @@ const CreateKnowledgeBase: React.FC<CreateKnowledgeBaseProps> = ({
         <form onSubmit={handleSubmit}>
           <TextInput
             label="Knowledge Base Name"
+            required
             {...form.register("name")}
             error={form.formState.errors.name?.message}
+            mb="lg"
+          />
+
+          <Textarea
+            label="Description"
+            {...form.register("description")}
+            error={form.formState.errors.description?.message}
             mb="lg"
           />
 

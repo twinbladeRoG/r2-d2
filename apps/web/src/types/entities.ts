@@ -118,11 +118,13 @@ export interface IAgentWorkflow {
 
 export interface IKnowledgeBase extends IBaseEntity {
   name: string;
+  description?: string;
   vector_store_name: string;
 }
 
 export interface ICreateKnowledgeBaseRequest {
   name: string;
+  description?: string;
   documents: string[];
 }
 

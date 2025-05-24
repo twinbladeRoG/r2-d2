@@ -178,7 +178,9 @@ class KnowledgeBaseService:
 
         knowledge_base = KnowledgeBase(
             name=payload.name,
+            description=payload.description,
             vector_store_name=self.slugify_name(payload.name),
+            created_by_id=user.id,
         )
 
         self._initialize_vector_collection(

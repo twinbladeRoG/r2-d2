@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlmodel import Field, SQLModel
 
 from api.models import Document, KnowledgeBaseBase
@@ -5,6 +7,7 @@ from api.models import Document, KnowledgeBaseBase
 
 class KnowledgeBaseCreate(SQLModel):
     name: str
+    description: Optional[str] = None
     documents: list[str] = Field(..., min_length=1, max_length=255)
 
 

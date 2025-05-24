@@ -65,6 +65,7 @@ class User(UserBase, table=True):
 
     documents: list["Document"] = Relationship(back_populates="owner")
     conversations: list["Conversation"] = Relationship(back_populates="user")
+    knowledge_bases: list["KnowledgeBase"] = Relationship(back_populates="created_by")
 
     @field_validator("password", mode="after")
     @classmethod
@@ -237,6 +238,7 @@ class KnowledgeBaseBase(SQLModel):
     )
 
     name: str = Field(min_length=3, max_length=255, unique=True)
+    description: Optional[str] = Field(default=None, max_length=255, nullable=True)
     vector_store_name: str = Field(min_length=3, max_length=255)
 
 
@@ -251,6 +253,9 @@ class KnowledgeBase(KnowledgeBaseBase, table=True):
 
     name: str = Field(min_length=3, max_length=255, unique=True)
     vector_store_name: str = Field(min_length=3, max_length=255)
+
+    created_by_id: uuid.UUID = Field(foreign_key="user.id")
+    created_by: User = Relationship(back_populates="knowledge_bases")
 
     documents: list[Document] = Relationship(
         back_populates="knowledge_bases", link_model=DocumentKnowledgeBaseLink

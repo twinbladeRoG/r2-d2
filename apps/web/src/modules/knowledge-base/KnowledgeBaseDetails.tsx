@@ -22,6 +22,7 @@ const KnowledgeBaseDetails: React.FC<KnowledgeBaseDetailsProps> = ({
           {knowledgeBase.data?.name}
         </Title>
         <Divider mb="xs" />
+        <p className="italic">{knowledgeBase.data?.description}</p>
         <p>
           Vector Store: <strong>{knowledgeBase.data?.vector_store_name}</strong>
         </p>
