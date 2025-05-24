@@ -23,6 +23,7 @@ import { useMemo, useState } from "react";
 import UserDocumentAction from "./UserDocumentAction";
 import CreateKnowledgeBase from "../knowledge-base/CreateKnowledgeBase";
 import { useDisclosure } from "@mantine/hooks";
+import { Link } from "react-router-dom";
 
 const columnHelper = createColumnHelper<IFile>();
 
@@ -53,7 +54,8 @@ const UserDocuments = () => {
         header: "File",
         cell: (info) => (
           <Anchor
-            href={`/extraction/${info.row.original.id}`}
+            component={Link}
+            to={`/extraction/${info.row.original.id}`}
             title={info.getValue()}>
             <div className="flex gap-2 items-center">
               <Icon

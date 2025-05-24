@@ -18,6 +18,7 @@ import { useUserFiles } from "../../apis/queries/file-storage.queries";
 import { bytesToSize, getFileIcon, getStatusColor } from "../../utils";
 import { IFileFilterQuery } from "../../types";
 import { useDebouncedCallback } from "@mantine/hooks";
+import { Link } from "react-router-dom";
 
 interface DocumentsModalProps {
   opened: boolean;
@@ -133,7 +134,8 @@ const DocumentsModal: React.FC<DocumentsModalProps> = ({
             <div className="flex items-center">
               <div className="">
                 <Anchor
-                  href={`/extraction/${doc.id}`}
+                  component={Link}
+                  to={`/extraction/${doc.id}`}
                   title={doc.filename}
                   target="_blank"
                   mb="xs">

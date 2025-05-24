@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from openai import OpenAI
 from qdrant_client import QdrantClient
@@ -10,6 +11,7 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
+    PointStruct,
     VectorParams,
 )
 from sqlmodel import Session, delete, or_, select
@@ -17,7 +19,7 @@ from sqlmodel import Session, delete, or_, select
 from api.core.config import settings
 from api.error import UserDefinedException
 from api.logger import logger
-from api.models import Document, KnowledgeBase, User
+from api.models import Document, ExtractionStatus, KnowledgeBase, User
 
 from .schemas import KnowledgeBaseCreate
 
@@ -61,7 +63,7 @@ class KnowledgeBaseService:
                 vectors_config=VectorParams(size=1024, distance=Distance.COSINE),
             )
 
-    def create_embeddings(self, input: str | list[str]):
+    def _create_embeddings(self, input: str | list[str]):
         embeddings = self.openai.embeddings.create(
             input=input,
             model="bge-large-en-v1.5_fp32.gguf",
@@ -69,35 +71,38 @@ class KnowledgeBaseService:
         )
         return embeddings
 
-    def search_from_vector_store(
-        self, collection_name: str, document_id: str, query: str
-    ):
-        logger.debug(
-            f"Searching in vector store for document_id: {document_id} with query: {query}"
-        )
+    def _store_to_vector_store(self, collection_name: str, document: Document):
+        chunks: list[tuple[int, str]] = []
 
-        query_embedding = self.create_embeddings(query)
+        for section in document.extracted_sections:
+            section_chunks = self._split_text_to_chunks(section.content, 512)
+            chunks.extend([(section.page_number, chunk) for chunk in section_chunks])
 
-        results = self.vector_store.search(
-            collection_name=collection_name,
-            query_vector=query_embedding.data[0].embedding,
-            limit=5,
-            query_filter=Filter(
-                must=[
-                    FieldCondition(
-                        key="document_id", match=MatchValue(value=document_id)
+        embeddings = self._create_embeddings(input=[chunk[1] for chunk in chunks])
+
+        self._initialize_vector_collection(collection_name, raise_if_not_found=True)
+
+        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings.data)):
+            self.vector_store.upload_points(
+                collection_name=collection_name,
+                points=[
+                    PointStruct(
+                        id=uuid4().hex,
+                        vector=embedding.embedding,
+                        payload={
+                            "page_number": chunk[0],
+                            "text": chunk[1],
+                            "document_id": document.id,
+                        },
                     )
-                ]
-            ),
-        )
+                ],
+            )
 
-        logger.debug(
-            f"Search results retrieved for document_id: {document_id} is {len(results)} for query: {query}"
-        )
+        collection = self.vector_store.get_collection(collection_name)
 
-        return results
+        return collection.points_count
 
-    def get_count_of_points_from_collection(
+    def _get_count_of_points_from_collection(
         self, document_id: str, collection_name: str
     ):
         self._initialize_vector_collection(collection_name, True)
@@ -119,8 +124,10 @@ class KnowledgeBaseService:
 
         return results.count
 
-    def remove_document_from_vector_store(self, document_id: str, collection_name: str):
-        count = self.get_count_of_points_from_collection(document_id, collection_name)
+    def _remove_document_from_vector_store(
+        self, document_id: str, collection_name: str
+    ):
+        count = self._get_count_of_points_from_collection(document_id, collection_name)
 
         if count == 0:
             return
@@ -142,14 +149,14 @@ class KnowledgeBaseService:
 
         return result.status
 
-    def slugify_name(self, name: str):
+    def _slugify_name(self, name: str):
         return re.sub(r"\s+", "_", name.strip().lower())
 
     def _check_if_knowledge_base_exists(self, session: Session, name: str):
         statement = select(KnowledgeBase).where(
             or_(
                 KnowledgeBase.name == name,
-                KnowledgeBase.vector_store_name == self.slugify_name(name),
+                KnowledgeBase.vector_store_name == self._slugify_name(name),
             )
         )
         knowledge_base = session.exec(statement).first()
@@ -158,6 +165,33 @@ class KnowledgeBaseService:
             return False
 
         return True
+
+    def search_from_vector_store(
+        self,
+        session: Session,
+        user: User,
+        knowledge_base_id: str,
+        query: str,
+        top_k: int = 5,
+    ):
+        knowledge_base = self.get_knowledge_base_by_id(session, user, knowledge_base_id)
+        logger.debug(
+            f"Searching in vector store: {knowledge_base.vector_store_name} with query: {query}"
+        )
+
+        query_embedding = self.create_embeddings(query)
+
+        results = self.vector_store.search(
+            collection_name=knowledge_base.vector_store_name,
+            query_vector=query_embedding.data[0].embedding,
+            limit=top_k,
+        )
+
+        logger.debug(
+            f"Search results retrieved for vector store: {knowledge_base.vector_store_name} is {len(results)} for query: {query}"
+        )
+
+        return results
 
     def create_knowledge_base(
         self,
@@ -179,7 +213,7 @@ class KnowledgeBaseService:
         knowledge_base = KnowledgeBase(
             name=payload.name,
             description=payload.description,
-            vector_store_name=self.slugify_name(payload.name),
+            vector_store_name=self._slugify_name(payload.name),
             created_by_id=user.id,
         )
 
@@ -319,5 +353,46 @@ class KnowledgeBaseService:
         logger.debug(
             f"Document with id: {document_id} removed from knowledge base: {knowledge_base_id}"
         )
+
+        return knowledge_base
+
+    def create_embeddings_for_documents(
+        self,
+        session: Session,
+        user: User,
+        knowledge_base_id: str,
+    ):
+        knowledge_base = self.get_knowledge_base_by_id(session, user, knowledge_base_id)
+
+        if not knowledge_base.documents:
+            raise UserDefinedException(
+                f"No documents found in knowledge base: {knowledge_base.name}",
+                "NO_DOCUMENTS_IN_KNOWLEDGE_BASE",
+            )
+
+        for document in knowledge_base.documents:
+            if document.extraction_status != ExtractionStatus.COMPLETED:
+                raise UserDefinedException(
+                    f"Document {document.original_filename} has not been processed yet.",
+                    "DOCUMENT_NOT_PROCESSED",
+                )
+
+        for document in knowledge_base.documents:
+            try:
+                self._remove_document_from_vector_store(
+                    collection_name=knowledge_base.vector_store_name,
+                    document_id=str(document.id),
+                )
+                self._store_to_vector_store(
+                    collection_name=knowledge_base.vector_store_name, document=document
+                )
+            except Exception as e:
+                logger.error(
+                    f"Error storing document: {document.original_filename} to vector store for knowledge base: {knowledge_base.name}, error: {e}"
+                )
+                raise UserDefinedException(
+                    f"Error storing document: {document.original_filename} to vector store for knowledge base: {knowledge_base.name}",
+                    "VECTOR_STORE_ERROR",
+                )
 
         return knowledge_base

@@ -37,3 +37,8 @@ export const removeDocumentFromKnowledgeBase = (
   http.delete<IKnowledgeBaseWithDocuments>(
     `/api/v1/knowledge-base/${knowledgeBaseId}/documents/${documentId}`
   );
+
+export const createEmbeddingForKnowledgeBase = (knowledgeBaseId: string) =>
+  http.post<null>(
+    `/api/v1/knowledge-base/${knowledgeBaseId}/add-to-vector-store`
+  );

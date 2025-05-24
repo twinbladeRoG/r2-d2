@@ -93,3 +93,16 @@ def remove_document_from_knowledge_base(
     )
 
     return result
+
+
+@router.post("/{knowledge_base_id}/add-to-vector-store")
+def add_knowledge_base_to_vector_store(
+    knowledge_base_id: str,
+    session: SessionDep,
+    user: CurrentUser,
+    knowledge_base_service: KnowledgeBaseServiceDep,
+) -> None:
+    result = knowledge_base_service.create_embeddings_for_documents(
+        session, user, knowledge_base_id
+    )
+    return result

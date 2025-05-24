@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addDocumentToKnowledgeBase,
+  createEmbeddingForKnowledgeBase,
   createKnowledgeBase,
   deleteKnowledgeBase,
   getKnowledgeBase,
@@ -124,3 +125,18 @@ export const useRemoveDocumentFromKnowledgeBase = (knowledgeBaseId: string) => {
     }
   });
 };
+
+export const useCreateEmbeddingForKnowledgeBase = () =>
+  useMutation({
+    mutationFn: async (knowledgeBaseId: string) => {
+      const res = await createEmbeddingForKnowledgeBase(knowledgeBaseId);
+      return res;
+    },
+    onError: (err) => {
+      notifications.show({
+        message: err?.message,
+        title: "Oops! Something went wrong.",
+        color: "red"
+      });
+    }
+  });

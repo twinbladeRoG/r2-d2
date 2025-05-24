@@ -16,7 +16,12 @@ import { useScheduleDocumentsForExtraction } from "../../apis/queries/extract.qu
 import { useQueryClient } from "@tanstack/react-query";
 import DocumentsModal from "./DocumentsModal";
 import { useDisclosure } from "@mantine/hooks";
-import { useAddDocumentToKnowledgeBase } from "../../apis/queries/knowledge-base.queries";
+import {
+  useAddDocumentToKnowledgeBase,
+  useCreateEmbeddingForKnowledgeBase
+} from "../../apis/queries/knowledge-base.queries";
+import { notifications } from "@mantine/notifications";
+import { Link } from "react-router-dom";
 
 interface KnowledgeBaseDocumentsProps {
   documents: Array<IFile>;
@@ -51,7 +56,8 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
         header: "File",
         cell: (info) => (
           <Anchor
-            href={`/extraction/${info.row.original.id}`}
+            component={Link}
+            to={`/extraction/${info.row.original.id}`}
             title={info.getValue()}>
             <div className="flex gap-2 items-center">
               <Icon
@@ -110,6 +116,7 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
   const queryClient = useQueryClient();
   const addDocumentsToKnowledgeBase =
     useAddDocumentToKnowledgeBase(knowledgeBaseId);
+  const createEmbeddings = useCreateEmbeddingForKnowledgeBase();
 
   const handleDocumentsForExtraction = () => {
     const selectedRows = table.getSelectedRowModel().rows.map((row) => row.id);
@@ -128,6 +135,17 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
   const handleAddDocuments = (documents: string[]) => {
     addDocumentsToKnowledgeBase.mutate(documents, {
       onSuccess: () => documentsModalHandler.close()
+    });
+  };
+
+  const handleCreateEmbeddings = () => {
+    createEmbeddings.mutate(knowledgeBaseId, {
+      onSuccess: () => {
+        notifications.show({
+          color: "green",
+          message: "Embeddings created successfully!"
+        });
+      }
     });
   };
 
@@ -158,6 +176,15 @@ const KnowledgeBaseDocuments: React.FC<KnowledgeBaseDocumentsProps> = ({
           onAddDocuments={handleAddDocuments}
           isAdding={addDocumentsToKnowledgeBase.isPending}
         />
+
+        <Button
+          size="sm"
+          color="grape"
+          loading={createEmbeddings.isPending}
+          onClick={handleCreateEmbeddings}
+          leftSection={<Icon icon="ph:vector-three-duotone" />}>
+          Create Embeddings
+        </Button>
       </div>
 
       <Table>
