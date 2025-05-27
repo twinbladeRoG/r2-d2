@@ -14,6 +14,8 @@ class BaseAgent(ABC):
     Base class for all agents.
     """
 
+    services: dict[str, Any] = {}
+
     def __init__(self, agent_id: str = uuid4()):
         self.id = agent_id
         self.graph: CompiledStateGraph | None = None
@@ -74,3 +76,6 @@ class BaseAgent(ABC):
         Log a message with the agent's name.
         """
         logger.debug(f">> {cls.__name__}: {message}")
+
+    def add_service(self, name: str, service: Any):
+        self.services.update({name: service})

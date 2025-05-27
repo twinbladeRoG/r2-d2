@@ -18,7 +18,7 @@ UPLOAD_PATH = Path("uploads")
 
 class FileStorageService:
     @staticmethod
-    def get_local_file_path(username: str, file_name: str):
+    def _get_local_file_path(username: str, file_name: str):
         """
         Get the file path for a given file name.
         """
@@ -31,7 +31,7 @@ class FileStorageService:
         file_extension = file.filename.split(".")[-1]
         new_file_name = f"{file_name.replace(' ', '_')}_{uuid4().hex}.{file_extension}"
 
-        file_path = self.get_local_file_path(user.username, new_file_name)
+        file_path = self._get_local_file_path(user.username, new_file_name)
         dir_path = file_path.parent
 
         if not dir_path.exists():
@@ -79,7 +79,7 @@ class FileStorageService:
     def get_file_path(self, user: User, session: Session, file_id: str):
         document = self.get_file(user, session, file_id)
 
-        file_path = self.get_local_file_path(user.username, document.filename)
+        file_path = self._get_local_file_path(user.username, document.filename)
 
         if not file_path.exists():
             raise UserDefinedException(
@@ -104,6 +104,8 @@ class FileStorageService:
             )
         if query.exclude:
             statement = statement.where(Document.id.not_in(query.exclude))
+        if query.file_types:
+            statement = statement.where(Document.content_type.in_(query.file_types))
 
         results = session.exec(statement)
 

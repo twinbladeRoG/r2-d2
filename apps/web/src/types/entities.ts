@@ -136,4 +136,5 @@ export interface IFileFilterQuery {
   exclude?: string[];
   search?: string;
   extraction_status?: ExtractionStatus;
+  file_types?: string[];
 }

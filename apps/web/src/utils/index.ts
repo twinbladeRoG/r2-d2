@@ -35,6 +35,10 @@ export const getFileIcon = (type: string) => {
       return "mdi:file-pdf";
     case MIME_TYPES.docx:
       return "mdi:file-word";
+    case MIME_TYPES.csv:
+      return "mdi:file-csv";
+    case MIME_TYPES.xlsx:
+      return "mdi:file-excel";
     default:
       return "mdi:file-document";
   }

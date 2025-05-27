@@ -17,9 +17,14 @@ const renderer = {
   },
   table(children) {
     return (
-      <Table withTableBorder withColumnBorders>
-        {children}
-      </Table>
+      <div className="max-w-[60dvw] overflow-x-auto mb-4">
+        <Table
+          withTableBorder
+          withColumnBorders
+          className="!max-w-[400px] !w-full">
+          {children}
+        </Table>
+      </div>
     );
   },
   tableBody(children) {

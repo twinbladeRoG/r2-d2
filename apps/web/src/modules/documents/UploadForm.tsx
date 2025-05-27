@@ -7,6 +7,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useUploadFile } from "../../apis/queries/file-storage.queries";
 import { notifications } from "@mantine/notifications";
 
+const ACCEPTED_FILE_TYPES: string[] = [
+  MIME_TYPES.pdf,
+  MIME_TYPES.docx,
+  MIME_TYPES.csv,
+  MIME_TYPES.xlsx
+];
+
 const schema = yup.object({
   files: yup
     .array()
@@ -14,8 +21,7 @@ const schema = yup.object({
       yup.mixed().test({
         test: (value) => {
           const file = value as FileWithPath;
-          const validTypes: string[] = [MIME_TYPES.pdf, MIME_TYPES.docx];
-          return validTypes.includes(file.type);
+          return ACCEPTED_FILE_TYPES.includes(file.type);
         },
         message: "Only PDF and DOCX files are allowed",
         name: "is-valid-file-type"
@@ -59,7 +65,7 @@ const UploadForm = () => {
           name="files"
           render={({ field, fieldState }) => (
             <DropFileInput
-              accept={[MIME_TYPES.pdf, MIME_TYPES.docx]}
+              accept={ACCEPTED_FILE_TYPES}
               mb={"lg"}
               value={field.value as FileWithPath[]}
               onDrop={field.onChange}

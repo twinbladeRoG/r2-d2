@@ -39,7 +39,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isStreaming,
   tools,
   hasInterrupt,
-  interruptMessage,
+  interruptData,
   citations
 }) => {
   // for reasoning model, we split the message into content and thought
@@ -125,8 +125,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         </div>
       ) : null}
 
-      {hasInterrupt && interruptMessage ? (
-        <Markdown renderer={renderer}>{interruptMessage}</Markdown>
+      {hasInterrupt && interruptData?.message ? (
+        <Markdown renderer={renderer}>{interruptData.message}</Markdown>
       ) : null}
 
       {!isUser && !isLoading && tools !== undefined && tools.length > 0 ? (

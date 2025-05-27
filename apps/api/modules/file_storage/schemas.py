@@ -13,3 +13,6 @@ class FileFilterParams(BaseModel):
         default=None, description="Search term to filter files by name or content"
     )
     extraction_status: Optional[ExtractionStatus] = None
+    file_types: list[str] = Field(
+        default=None, description="Filter file type like text/csv"
+    )

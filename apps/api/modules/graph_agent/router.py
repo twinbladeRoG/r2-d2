@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
+from api.dependencies import CurrentUser, FileStorageServiceDep, SessionDep
 from api.logger import logger
 
 from .dependencies import AgentDep
@@ -25,10 +26,21 @@ def chat(agent_name: str, agent: AgentDep):
 
 
 @router.post("/{agent_name}/chat")
-def chat(agent_name: str, body: AgentChatCreate, agent: AgentDep):
+def chat(
+    agent_name: str,
+    body: AgentChatCreate,
+    agent: AgentDep,
+    user: CurrentUser,
+    file_storage_service: FileStorageServiceDep,
+    session: SessionDep,
+):
     if agent is None:
         logger.info(f"Agent {agent_name} not found")
         raise HTTPException(status_code=404, detail=f"Agent {agent_name} not found")
+
+    agent.add_service("user", user)
+    agent.add_service("file_storage", file_storage_service)
+    agent.add_service("session", session)
 
     return StreamingResponse(
         agent.get_answer(

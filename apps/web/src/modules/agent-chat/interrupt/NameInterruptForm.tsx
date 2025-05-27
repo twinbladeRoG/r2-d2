@@ -3,10 +3,10 @@ import { Button, Textarea } from "@mantine/core";
 import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import * as yup from "yup";
-import { cn } from "../../utils";
+import { cn } from "../../../utils";
 import { Icon } from "@iconify/react";
 
-interface InterruptFormProps {
+interface NameInterruptFormProps {
   onSubmit: (message: string) => PromiseLike<void>;
 }
 
@@ -14,10 +14,10 @@ const schema = yup.object({
   message: yup.string().required("Required")
 });
 
-const InterruptForm: React.FC<InterruptFormProps> = ({ onSubmit }) => {
+const NameInterruptForm: React.FC<NameInterruptFormProps> = ({ onSubmit }) => {
   const form = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { message: "Sohan" }
+    defaultValues: { message: "" }
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
@@ -48,4 +48,4 @@ const InterruptForm: React.FC<InterruptFormProps> = ({ onSubmit }) => {
   );
 };
 
-export default InterruptForm;
+export default NameInterruptForm;

@@ -3,6 +3,11 @@ import { IChatMessage, ICitation } from "../../types";
 import { IToolResult } from "../chat/ChatMessage";
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
 
+export interface IInterruptData {
+  type: string;
+  message: string;
+}
+
 export interface IMessage {
   id: string;
   role: IChatMessage["role"];
@@ -13,13 +18,16 @@ export interface IMessage {
   isStreaming?: boolean;
   tools?: Array<IToolResult>;
   hasInterrupt?: true;
-  interruptMessage?: string;
+  interruptData?: IInterruptData;
   citations?: Array<ICitation> | null;
 }
 
 const useChatMessages = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isInterrupted, setIsInterrupted] = useState(false);
+  const [interruptData, setInterruptData] = useState<IInterruptData | null>(
+    null
+  );
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [visitedNodes, setVisitedNodes] = useState<string[]>([]);
 
@@ -142,10 +150,7 @@ const useChatMessages = () => {
 
         case "interrupt": {
           try {
-            const data = JSON.parse(message.data) as {
-              query: string;
-              message: string;
-            };
+            const data = JSON.parse(message.data) as IInterruptData;
 
             setMessages((prev) =>
               prev.map((message) => {
@@ -159,12 +164,13 @@ const useChatMessages = () => {
                   isStreaming: true,
                   isError: false,
                   hasInterrupt: true,
-                  interruptMessage: data.message
+                  interruptData: data
                 } satisfies IMessage;
               })
             );
 
             setIsInterrupted(true);
+            setInterruptData(data);
 
             options?.onDone?.();
           } catch (err) {
@@ -223,6 +229,8 @@ const useChatMessages = () => {
     updateMessage,
     isInterrupted,
     setIsInterrupted,
+    interruptData,
+    setInterruptData,
     conversationId,
     setConversationId,
     visitedNodes,

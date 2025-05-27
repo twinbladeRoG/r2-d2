@@ -23,9 +23,8 @@ import Mermaid from "./Mermaid";
 import useChatMessages, { IMessage } from "./hooks";
 import AgentGraph from "./AgentGraph";
 import { ReactFlowProvider } from "@xyflow/react";
-import InterruptForm from "./InterruptForm";
 import { Icon } from "@iconify/react";
-
+import InterruptForm from "./interrupt";
 interface AgentChatProps {
   className?: string;
   agentName: string;
@@ -48,7 +47,9 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
     setConversationId,
     visitedNodes,
     appendVisitedNode,
-    setVisitedNodes
+    setVisitedNodes,
+    interruptData,
+    setInterruptData
   } = useChatMessages();
   const [isStreaming, setIsStreaming] = useState(false);
 
@@ -59,6 +60,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
     const botMessageId = uuid();
     setIsStreaming(true);
     setIsInterrupted(false);
+    setInterruptData(null);
     setVisitedNodes([]);
 
     setMessages((prev) => [
@@ -92,7 +94,8 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
     await fetchEventSource(`${API_URL}/api/v1/agent/${agentName}/chat`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
         message: message,
@@ -166,7 +169,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
 
   return (
     <section className={cn(className, "grid grid-cols-[1fr_380px] gap-4")}>
-      <div className="flex flex-col overflow-auto">
+      <div className="flex flex-col overflow-y-auto w-full">
         <div className="flex items-center gap-4 w-full">
           <h1 className="font-bold">Agent Chat</h1>
 
@@ -175,7 +178,8 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
             data={[
               { label: "Web Search Agent", value: "web_search_agent" },
               { label: "Human Agent", value: "human_agent" },
-              { label: "PowerPoint Agent", value: "power_point_agent" }
+              { label: "PowerPoint Agent", value: "power_point_agent" },
+              { label: "Excel Agent", value: "excel_agent" }
             ]}
             value={agentName}
             onChange={(value) => {
@@ -212,8 +216,9 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
               />
             ))}
 
-            {isInterrupted ? (
+            {isInterrupted && interruptData ? (
               <InterruptForm
+                type={interruptData.type}
                 onSubmit={(message) => handleSubmit(message, true)}
               />
             ) : null}

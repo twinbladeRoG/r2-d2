@@ -12,6 +12,11 @@ export const getUsersFiles = async (filter?: IFileFilterQuery) => {
       params.append("exclude", item);
     });
   }
+  if (filter?.file_types) {
+    filter.file_types.forEach((item) => {
+      params.append("file_types", item);
+    });
+  }
 
   return http.get<Array<IFile>>(`/api/v1/file-storage/?${params.toString()}`);
 };
