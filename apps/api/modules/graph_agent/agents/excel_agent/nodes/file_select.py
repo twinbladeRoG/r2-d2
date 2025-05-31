@@ -12,11 +12,8 @@ class FileSelectNode:
         pass
 
     def __call__(self, state: State):
-        file_id = state.get("file_id")
+        value = interrupt(
+            {"type": "SELECT_EXCEL_FILE", "message": "Please select an Excel file."}
+        )
 
-        if file_id == None:
-            interrupt(
-                {"type": "SELECT_EXCEL_FILE", "message": "Please select an Excel file."}
-            )
-
-        return {"file_id": file_id}
+        return {"file_id": value}

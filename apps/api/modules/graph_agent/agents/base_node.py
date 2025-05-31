@@ -21,7 +21,7 @@ class BaseNode(ABC):
         self.services.update({name: service})
 
     def get_service(self, name: str):
-        service = self.services.get(name)
+        service = self.services.get(name, None)
 
         if service == None:
             raise UserDefinedException(f"Service: '{name}' is not found in {self.name}")

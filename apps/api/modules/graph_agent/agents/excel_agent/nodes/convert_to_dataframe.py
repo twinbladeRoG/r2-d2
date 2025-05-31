@@ -15,10 +15,11 @@ class ConvertToDataFrameNode(BaseNode):
     """
 
     def __init__(self, services: dict[str, Any]):
+        super().__init__()
         self.services = services
 
     def __call__(self, state: State):
-        file_id = state["file_id"]
+        file_id = state.get("file_id", None)
 
         user: User = self.get_service("user")
         session: Session = self.get_service("session")

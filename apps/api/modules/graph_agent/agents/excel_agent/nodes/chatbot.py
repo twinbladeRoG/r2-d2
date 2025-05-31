@@ -32,21 +32,15 @@ class ChatBotNode:
                     "role": "system",
                     "content": f"""
                     You are a Data Analyst and a Data Scientist, who can find meaningful insights based on the data the user has provided
-
                     Below is sample of the first 5 rows of the Pandas dataframe for you to analyze
                     <data_frame>
-                    {dataframe.head(5).to_markdown()}
+                    # {dataframe.head(5).to_markdown()}
                     </data_frame>
-
                     Below is the descriptive statistics summarizing the central tendency, dispersion, and shape of a dataset's distribution
                     <data_frame_describe>
                     {df_describe.to_markdown()}
                     </data_frame_describe>
-
                     Analyze the data and give key insight on it based on the user query.
-
-                    Also generate Python Code with pandas for analysis if required.
-                    Use the PyodideSandboxTool to execute Python code when necessary
                     """,
                 },
                 *state["messages"],

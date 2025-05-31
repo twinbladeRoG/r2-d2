@@ -32,15 +32,15 @@ class ExcelAgent(BaseAgent):
         graph_builder = StateGraph(State)
 
         # Create nodes
-        chatbot = ChatBotNode()
-        convert_to_dataframe = ConvertToDataFrameNode(self.services)
         file_router = FileRouterNode()
         file_select = FileSelectNode()
+        convert_to_dataframe = ConvertToDataFrameNode(self.services)
+        chatbot = ChatBotNode()
 
         # Add Nodes
-        graph_builder.add_node("chatbot", chatbot)
-        graph_builder.add_node("convert_to_dataframe", convert_to_dataframe)
         graph_builder.add_node("file_select", file_select)
+        graph_builder.add_node("convert_to_dataframe", convert_to_dataframe)
+        graph_builder.add_node("chatbot", chatbot)
 
         # Create Workflow
         graph_builder.add_conditional_edges(
@@ -71,13 +71,13 @@ class ExcelAgent(BaseAgent):
 
             if interrupt_response is not None:
                 events = graph.stream(
-                    Command(update={"name": interrupt_response.message}),
-                    config,
-                    stream_mode="updates",
-                )
-            if interrupt_response is not None:
-                events = graph.stream(
-                    Command(update={"file_id": interrupt_response.message}),
+                    Command(
+                        resume=interrupt_response.message,
+                        update={
+                            "file_id": interrupt_response.message,
+                            "messages": [{"role": "user", "content": message}],
+                        },
+                    ),
                     config,
                     stream_mode="updates",
                 )
@@ -91,10 +91,12 @@ class ExcelAgent(BaseAgent):
             for event in events:
                 for node, event_value in event.items():
                     yield f"event: node\ndata: {node}\n\n"
+                    logger.debug(f"{self.name}:\tNode:\t{node}")
 
                     state = graph.get_state(config)
 
                     if len(state.next) != 0:
+                        logger.debug(f"{self.name}:\tNext Node:\t{state.next}")
                         yield f"event: node\ndata: {state.next[0]}\n\n"
 
                     if node == "__interrupt__":

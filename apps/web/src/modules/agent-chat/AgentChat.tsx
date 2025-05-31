@@ -91,6 +91,10 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
 
     const ctrl = new AbortController();
 
+    const messageToSent = hasInterrupt
+      ? (messages.find((m) => m.role === "user")?.message ?? "Hi")
+      : message;
+
     await fetchEventSource(`${API_URL}/api/v1/agent/${agentName}/chat`, {
       method: "POST",
       headers: {
@@ -98,7 +102,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ className, agentName }) => {
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
-        message: message,
+        message: messageToSent,
         conversation_id: conversationId,
         interrupt_response: hasInterrupt ? { message: message } : undefined
       }),
